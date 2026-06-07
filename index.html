@@ -1,4 +1,4 @@
-[Resource from github at repo://sr2527/lalo/sha/ff705173d678c139b1380aabb90627dfc44b9b67/contents/foulplay/index.html] <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -872,6 +872,7 @@ function renderRahmanJoin(){
     <input class="join-input" id="joinCode" placeholder="paste code" autocomplete="off" autocorrect="off" autocapitalize="off" value="${prefill}"/>
     <div class="spacer"></div>
     <button class="btn" id="joinBtn" onclick="doJoin()">let's go →</button>
+    <button class="btn ghost" style="margin-top:10px" onclick="S.jerseyRole=null;S.role=null;saveLocal();render()">← back</button>
   </div>`;
 }
 

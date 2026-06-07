@@ -586,7 +586,7 @@ function saveLocal(){
 /* ===================== JSONBIN SYNC ===================== */
 const SYNC_FIELDS=["score","statusText","lastStatus","events","seenEvents","herLog","hisLog",
   "herPred","betHer","betHim","betResult","commentary","quotes","prediction",
-  "wagerHer","wagerHim","wagerRevealed","milestones","quizResult"];
+  "wagerHer","wagerHim","wagerRevealed","milestones","quizResult","pathakQs"];
 // photos synced separately with size check (added dynamically in pushSync)
 
 function getSyncPayload(){
@@ -972,7 +972,7 @@ function declineDisclaimer(){
     setTimeout(()=>{btn.style.animation="";btn.textContent="Decline";},1600);}
 }
 function renderDisclaimer(){
-  $app().innerHTML=`<div class="screen" style="padding:24px 20px 32px">
+  $app().innerHTML=`<div class="screen" style="padding:24px 20px 32px;justify-content:flex-start;overflow-y:auto">
     <div class="eyebrow center" style="margin-bottom:6px">⚖️ legal notice</div>
     <h2 class="h2" style="text-align:center;margin-bottom:4px;font-size:1.2rem">Terms & Conditions</h2>
     <p class="muted center" style="font-size:.75rem;margin-bottom:12px">please read all 12 sections carefully</p>
@@ -990,7 +990,7 @@ function renderDisclaimer(){
 /* ===================== HOST SESSION (PATHAK) ===================== */
 function renderHostSession(){
   $app().innerHTML=`<div class="screen center">
-    <div class="eyebrow">step 2 of 2</div>
+    <div class="eyebrow">almost there</div>
     <h1 class="h1" style="margin:10px 0 8px">create the session</h1>
     <p class="muted" style="max-width:280px;margin:0 auto 24px;font-size:.9rem">
       This gives you a code to share with Rahman so you're synced on the same game.
@@ -1090,8 +1090,14 @@ async function doJoin(){
 
 function copyCode(){
   navigator.clipboard&&navigator.clipboard.writeText(S.binId);
-  showSyncBar("code copied to clipboard!");
+  showSyncBar("code copied!");
   setTimeout(hideSyncBar,1500);
+}
+function copyLink(){
+  const url=`https://sr2527.github.io/foulplay/?join=${S.binId}`;
+  navigator.clipboard&&navigator.clipboard.writeText(url);
+  showSyncBar("link copied — send it to Rahman!");
+  setTimeout(hideSyncBar,1800);
 }
 
 /* ===================== MAIN RENDER ===================== */
@@ -1650,9 +1656,13 @@ function tabPlan(){return `<section id="tab-plan" class="tab pad">
 
   <div class="card">
     <div style="font-weight:700;margin-bottom:6px">🔗 session</div>
-    <p class="muted" style="font-size:.82rem;margin-bottom:8px">Your session code — share with the other phone:</p>
-    <div class="code-box" style="font-size:1rem;letter-spacing:.08em;word-break:break-all" onclick="copyCode()">${S.binId||"—"}</div>
-    <p class="muted" style="font-size:.76rem">tap to copy</p>
+    <p class="muted" style="font-size:.82rem;margin-bottom:8px">Share this link with Rahman — she opens it and syncs automatically:</p>
+    <div class="code-box" style="font-size:.72rem;letter-spacing:.03em;word-break:break-all;padding:14px" onclick="copyLink()">${S.binId?`https://sr2527.github.io/foulplay/?join=${S.binId}`:"—"}</div>
+    <p class="muted" style="font-size:.76rem;margin-bottom:10px">tap to copy link · or share the code below manually</p>
+    <div class="row" style="gap:8px">
+      <button class="chip" style="flex:1;justify-content:center" onclick="copyLink()">📋 copy link</button>
+      <button class="chip" style="flex:1;justify-content:center" onclick="copyCode()">copy code only</button>
+    </div>
     <div class="spacer"></div>
     <button class="btn red" onclick="resetSession()">reset session (start over)</button>
   </div>
@@ -1866,6 +1876,10 @@ document.addEventListener("touchstart",()=>{try{getAudio();}catch(e){}},{once:tr
 function bumpScore(side){
   if(side==="col") S.score.h=(S.score.h||0)+1;
   else S.score.a=(S.score.a||0)+1;
+  const teamName=side==="col"?"colombia":"jordan";
+  const ours=isOurGoal(teamName);
+  if(ours){confetti();playGoalHorn();}else{playTone(330,.4,"sine",.18);}
+  flashMascot(rand(ours?(side==="col"?REACT.colGoal:REACT.jorGoal):REACT.theirGoal),ours?"goal":null);
   syncSave();paintScoreboard();
 }
 async function findFixture(){

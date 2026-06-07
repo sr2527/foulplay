@@ -470,7 +470,7 @@ const BETS=[
   {q:"Stadium successfully does The Wave",opts:["Yes","No"]},
   {q:"A shirtless fan ends up on the big screen",opts:["Yes","No"]},
   {q:"Someone squirts water bottle without touching lips",opts:["Yes","No"]},
-  {q:"More fans in Colombia yellow OR SDFC burgundy?",opts:["Yellow","Burgundy"]},
+  {q:"Colombia scores first",opts:["Yes","No"]},
   {q:"Total match goals",opts:["Under 2.5","Over 2.5"]},
   {q:"Who finishes their souvenir cup first?",opts:["Her","Him"]},
   {q:"Kiss cam catches someone mid-bite",opts:["Yes","No"]}
@@ -488,7 +488,7 @@ const PHOTOS=[
   {id:"facepaint",cap:"Most extreme face paint in the crowd",hint:"go hunting"},
   {id:"drums",cap:"The Colombian drum section",hint:"video or photo, try to get the noise"},
   {id:"yellow",cap:"The sea of yellow",hint:"from up high — the whole bowl"},
-  {id:"halftime",cap:"Halftime pose recreation",hint:"penalty run-up? keeper dive? you decide"}
+  {id:"halftime",cap:"Halftime pose",hint:"penalty run-up? keeper dive? invent something and commit"}
 ];
 const MILESTONES=[
   {id:"left",icon:"🚆",label:"left for Old Town",react:"Onward. Forward. The trolley awaits! 🚆"},
@@ -545,7 +545,8 @@ let S = {
   quizResult:null,
   lastSync:0, remoteTs:0,
   // local only flags
-  rahmanWelcomed:false, smsOpened:false
+  rahmanWelcomed:false, smsOpened:false,
+  vibeLog:[], starredMoments:[], noteToHer:"", noteToHim:""
 };
 
 function ls(k,fb){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch(e){return fb}}
@@ -589,7 +590,8 @@ function saveLocal(){
 /* ===================== JSONBIN SYNC ===================== */
 const SYNC_FIELDS=["score","statusText","lastStatus","events","seenEvents","herLog","hisLog",
   "herPred","betHer","betHim","betResult","commentary","quotes","prediction",
-  "wagerHer","wagerHim","wagerRevealed","milestones","quizResult","pathakQs"];
+  "wagerHer","wagerHim","wagerRevealed","milestones","quizResult","pathakQs",
+  "vibeLog","starredMoments","noteToHer","noteToHim"];
 // photos synced separately with size check (added dynamically in pushSync)
 
 function getSyncPayload(){
@@ -846,38 +848,38 @@ function buildSurpriseText(){
   const b=S.pathakQs.move||"bold";
 
   const opener=e==="locked in"
-    ?"okay so 🫡 i'm not usually good at this but i feel weirdly brave today and i need to say something before that goes away —"
+    ?"okay so 🫡✨ i'm not usually good at this but i feel weirdly brave today 💪🌟 and i need to say something before that goes away —"
     :e==="fumes"
-    ?"okay so 😵‍💫 i'm running on approximately zero sleep but one specific thought has been very loud all morning and i think it wants to be said —"
+    ?"okay so 😵‍💫☕ i'm running on approximately zero sleep but one specific thought has been VERY loud all morning 📢💭 and i think it wants to be said —"
     :e==="depends"
-    ?"okay so ☕ the coffee kicked in and so did a feeling and now here we are —"
-    :"okay so 👀 i need to say something and if i think about it too long i won't say it so —";
+    ?"okay so ☕✨ the coffee kicked in and so did a feeling 🥺🌞 and now here we are —"
+    :"okay so 👀💭 i need to say something and if i think about it too long i won't say it so — 😅🫶";
 
   const workBit=w==="stressed"||w==="little"
-    ?"\n\ni know i've had a lot going on lately 💼 i want today to be different. like intentionally put-the-phone-down different 📵"
+    ?"\n\ni know i've had a lot going on lately 💼😅 i want today to be different. like intentionally put-the-phone-down different 📵✨"
     :"";
 
   const askBit=b==="bold"
-    ?"\n\ni want to take you to a soccer match today ⚽🏟️\n\ncolombia 🇨🇴 vs jordan 🇯🇴 snapdragon stadium. are you free until like 6ish? i already have the trolley route 🚆, the plan, the whole thing. i just need a yes."
+    ?"\n\ni want to take you to a soccer match today ⚽🏟️🎉🤩\n\ncolombia 🇨🇴 vs jordan 🇯🇴 snapdragon stadium. are you free until like 6ish? 🤞🙏 i already have the trolley route 🚆, the plan, the whole thing 📋✅ i just need a yes. 💛"
     :b==="pretty bold"
-    ?"\n\ni really want to hang out with you today 💛\n\nalso separately: colombia 🇨🇴 is playing jordan 🇯🇴 at snapdragon stadium 🏟️ this afternoon ⚽ — are you free until like 6? — and i've already looked up the trolley route 🚆 because that's who i am now apparently"
+    ?"\n\ni really want to hang out with you today 💛🥺\n\nalso separately: colombia 🇨🇴 is playing jordan 🇯🇴 at snapdragon stadium 🏟️ this afternoon ⚽🎉 — are you free until like 6? 🤞 — and i've already looked up the trolley route 🚆 because that's who i am now apparently 😅🫶"
     :b==="medium"
-    ?"\n\ni really want to hang out with you today\n\nlike... a lot 💛\n\nalso separately: i love soccer ⚽ like. genuinely a lot.\n\nand then it hit me 💡 — what if both of those things happened at the same time\n\nmy brain genuinely short-circuited for a second thinking about it 🤯\n\ncolombia 🇨🇴 vs jordan 🇯🇴 snapdragon stadium 🏟️ are you free until like 6ish?"
-    :"\n\nso there's a soccer match today ⚽\n\ncolombia 🇨🇴 vs jordan 🇯🇴 snapdragon 🏟️ this afternoon.\n\nand i've been sitting here going back and forth about whether to ask you\n\nand i'm still going back and forth honestly but here's the text so apparently i'm doing it 😅";
+    ?"\n\ni really want to hang out with you today\n\nlike... a lot 💛🥺\n\nalso separately: i love soccer ⚽ like. genuinely a lot. 🫶\n\nand then it hit me 💡✨ — what if both of those things happened at the same time 🤯\n\nmy brain genuinely short-circuited for a second thinking about it 😵‍💫\n\ncolombia 🇨🇴 vs jordan 🇯🇴 snapdragon stadium 🏟️ are you free until like 6ish? 🤞"
+    :"\n\nso there's a soccer match today ⚽\n\ncolombia 🇨🇴 vs jordan 🇯🇴 snapdragon 🏟️ this afternoon.\n\nand i've been sitting here going back and forth about whether to ask you 😰😭\n\nand i'm still going back and forth honestly but here's the text so apparently i'm doing it 😅🙈";
 
   const appBit=b==="bold"
-    ?"\n\ni also built us a little app for the afternoon 📱 live scores ⚽, bets 🎲, a quote wall 📝, a mascot named Coach Ball 🏆 it's a lot. i'm a lot. come to the game."
+    ?"\n\ni also built us a little app for the afternoon 📱✨ live scores ⚽, bets 🎲, a quote wall 📝, a mascot named Coach Ball 🏆🥹 it's a lot. i'm a lot 😭 come to the game. 🫶🙏"
     :b==="we'll see"
-    ?"\n\ni also maybe built a tiny app for today 🤫 in case you said yes. i was optimistic 🤞"
-    :"\n\ni also maybe built us a little app for the afternoon 📱 because i wanted today to actually feel like a thing and not just a thing we did ✨";
+    ?"\n\ni also maybe built a tiny app for today 🤫📱 in case you said yes. i was optimistic 🤞😅"
+    :"\n\ni also maybe built us a little app for the afternoon 📱💛 because i wanted today to actually feel like a thing and not just a thing we did ✨🥹";
 
   const closer=b==="bold"
-    ?"\n\nso. are you in? ⚽🏟️\n\n(please be in. i'm already excited about this and that's mildly embarrassing.) 💛"
+    ?"\n\nso. are you in? ⚽🏟️🎉🎊🥳\n\n(please be in. i'm already excited about this and that's mildly embarrassing 😭🙈) 💛💛💛"
     :b==="pretty bold"
-    ?"\n\nso. do you wanna? with me? today? 🥺\n\n(you don't have to say yes. but also please say yes. okay bye 💛)"
+    ?"\n\nso. do you wanna? with me? today? 🥺🙏\n\n(you don't have to say yes. but also PLEASE say yes 🙏🙏🙏 okay bye 💛💛)"
     :b==="medium"
-    ?"\n\nso. do you wanna? with me? today? 🥺\n\n(no pressure. there's a little pressure. i'm bad at this. you know this. please say yes anyway 💛✨)"
-    :"\n\nso. maybe? possibly? with me? today? 🙃\n\n(i've been thinking about asking all morning. here we are. please don't make it weird. or do. that's also fine.) 💛";
+    ?"\n\nso. do you wanna? with me? today? 🥺😭\n\n(no pressure. there's a little pressure 😅 i'm bad at this. you know this. please say yes anyway 💛✨🙏)"
+    :"\n\nso. maybe? possibly? with me? today? 🙃😅\n\n(i've been thinking about asking all morning ☀️💭 here we are. please don't make it weird. or do. that's also fine.) 💛🫶";
 
   return opener+workBit+askBit+appBit+closer;
 }
@@ -908,8 +910,8 @@ function renderSheYes(){
   S.sheSaidYes=true;saveLocal();
   const appUrl=`https://sr2527.github.io/foulplay/?join=${S.binId||""}`;
   const codeBody=S.binId
-    ?`okay so 👀✨\n\ni just so happened to stumble upon this app called foulplay ⚽🏟️ and it is SUSPICIOUSLY custom made for us?? 😳🤨\n\nlike whoever built this clearly spent 8,000,000 hours 😭🙏 and somehow knew exactly what i would want — live scoreboard 📊, tactical log 📋, formation predictions 🧠, a whole corner to write my reads in real time ✍️ — almost like they knew i could have gone pro ⚽🌟 in case u forgot.\n\nBUT ALSO there's a mascot 🏆 and photo missions 📸 and a vibe quiz for you 🎯✨ bc the developer apparently said "she will need something to do while he analyzes the pressing structure" 🧐 which. very thoughtful of them.\n\nthe app literally has our jersey numbers 🔢 our names 🤯 i'm starting to connect some dots here —\n\nanyway:\n${appUrl}\n\n(backup code if the link doesn't work: ${S.binId}) 🔑\n\nwoweeee 🎊🎉🥳 lucky us honestly!! what are the ODDS 😇✨`
-    :`okay so 👀✨\n\ni just so happened to stumble upon this app called foulplay ⚽🏟️ and it is SUSPICIOUSLY custom made for us?? 😳🤨\n\nlike whoever built this clearly spent 8,000,000 hours 😭🙏 and somehow knew exactly what i would want — live scoreboard 📊, tactical log 📋, formation predictions 🧠 — almost like they knew i could have gone pro ⚽🌟 in case u forgot.\n\nBUT ALSO there's a mascot 🏆 and photo missions 📸 and a vibe quiz for you 🎯✨ bc the developer apparently said "she will need something to do while he analyzes the pressing structure" 🧐\n\nthe app literally has our jersey numbers 🔢 i'm starting to connect some dots — 🤨\n\nhttps://sr2527.github.io/foulplay/\n\nwoweeee 🎊🎉🥳 lucky us!! what are the ODDS 😇✨`;
+    ?`okay so 👀👀✨✨\n\ni just so happened to stumble upon this app called foulplay ⚽🏟️🤯 and it is SUSPICIOUSLY custom made for us?? 😳🤨😅🙈\n\nlike whoever built this clearly spent 8,000,000 hours 😭😭🙏🙏 and somehow knew exactly what i would want — live scoreboard 📊, tactical log 📋, formation predictions 🧠, a whole corner to write my reads in real time ✍️ — almost like they knew i could have gone pro ⚽🌟👟 in case u forgot.\n\nBUT ALSO there's a mascot 🏆🫶 and photo missions 📸 and a vibe quiz for you 🎯✨🥰 bc the developer apparently said "she will need something to do while he analyzes the pressing structure" 🧐 which. very thoughtful of them.\n\nthe app literally has our jersey numbers 🔢🤯 our names 😳😭 i'm starting to connect some dots here 🕵️‍♀️ —\n\nanyway:\n${appUrl}\n\n(backup code if the link doesn't work: ${S.binId}) 🔑\n\nwoweeee 🎊🎉🥳🎈✨ lucky us honestly!! what are the ODDS 😇✨🌟💛`
+    :`okay so 👀👀✨✨\n\ni just so happened to stumble upon this app called foulplay ⚽🏟️🤯 and it is SUSPICIOUSLY custom made for us?? 😳🤨😅🙈\n\nlike whoever built this clearly spent 8,000,000 hours 😭😭🙏🙏 and somehow knew exactly what i would want — live scoreboard 📊, tactical log 📋, formation predictions 🧠 — almost like they knew i could have gone pro ⚽🌟👟 in case u forgot.\n\nBUT ALSO there's a mascot 🏆🫶 and photo missions 📸 and a vibe quiz for you 🎯✨🥰 bc the developer apparently said "she will need something to do while he analyzes the pressing structure" 🧐\n\nthe app literally has our jersey numbers 🔢 i'm starting to connect some dots — 🕵️‍♀️🤨\n\nhttps://sr2527.github.io/foulplay/\n\nwoweeee 🎊🎉🥳🎈✨ lucky us!! what are the ODDS 😇✨🌟💛`;
   const codeSMS=`sms:9166777839;body=${encodeURIComponent(codeBody)}`;
   $app().innerHTML=`<div class="screen">
     <div style="font-size:2.8rem;text-align:center">🎉</div>
@@ -1226,18 +1228,18 @@ function paintScoreboard(){
     <div class="sb-status">${live?'<span class="live-dot"></span>':''}${S.statusText||"Kickoff 4:00 PM PDT"}</div>
     <div class="sb-row">
       <div class="sb-team"><div class="sb-flag">🇨🇴</div><div class="sb-name">Colombia</div></div>
-      <div style="display:flex;align-items:center;gap:6px">
-        ${manual?`<button class="sb-bump" onclick="bumpScore('col')">+</button>`:''}
+      <div style="display:flex;align-items:center;gap:4px">
+        ${manual?`<button class="sb-bump" onclick="bumpScore('col',true)" style="opacity:.45;font-size:.8rem">−</button><button class="sb-bump" onclick="bumpScore('col')">+</button>`:''}
         <div class="sb-score">${g.h}</div>
       </div>
       <div style="opacity:.5;font-size:.8rem;padding:0 4px">–</div>
-      <div style="display:flex;align-items:center;gap:6px">
+      <div style="display:flex;align-items:center;gap:4px">
         <div class="sb-score">${g.a}</div>
-        ${manual?`<button class="sb-bump" onclick="bumpScore('jor')">+</button>`:''}
+        ${manual?`<button class="sb-bump" onclick="bumpScore('jor')">+</button><button class="sb-bump" onclick="bumpScore('jor',true)" style="opacity:.45;font-size:.8rem">−</button>`:''}
       </div>
       <div class="sb-team"><div class="sb-flag">🇯🇴</div><div class="sb-name">Jordan</div></div>
     </div>
-    ${manual?`<div style="font-size:.62rem;opacity:.5;text-align:center;margin-top:8px">tap + to log a goal</div>`:''}
+    ${manual?`<div style="font-size:.62rem;opacity:.5;text-align:center;margin-top:8px">+ goal · − correction</div>`:''}
   </div>`;
   // halftime card
   const hc=document.getElementById("halftimeCard");
@@ -1264,8 +1266,9 @@ function paintScoreboard(){
   const lc=document.getElementById("liveControls");if(!lc)return;
   lc.innerHTML=`<div class="row" style="flex-wrap:wrap;gap:8px">
     <button class="chip" onclick="pollNow()">↻ refresh</button>
+    <button class="chip" id="starBtn" onclick="starMoment()">⭐ star this moment</button>
   </div>
-  <p class="muted" style="font-size:.76rem;margin-top:8px">${S.fixtureId?'Live data 📡 · game updates every 90s · your logs sync in ~5s':'No live feed — use the + buttons on the scoreboard to log goals'}</p>`;
+  <p class="muted" style="font-size:.76rem;margin-top:8px">${S.fixtureId?'Live data 📡 · game updates every 90s · your logs sync in ~5s':'No live feed — use + to log goals, − to correct'}</p>`;
   renderFeed();
 }
 function renderFeed(){
@@ -1301,8 +1304,10 @@ function tabHis(){return `<section id="tab-his" class="tab pad">
         <input class="txt" style="margin:5px 0 12px" value="${esc(S.prediction.scorer||'')}"
           placeholder="who finds the net first?" oninput="S.prediction.scorer=this.value;syncSave()"/>
         <label class="muted" style="font-size:.8rem">Colombia's formation</label>
-        <input class="txt" style="margin:5px 0 0" value="${esc(S.prediction.shape||'')}"
-          placeholder="4-2-3-1? back three?" oninput="S.prediction.shape=this.value;syncSave()"/>
+        <select class="txt" style="margin:5px 0 0" onchange="S.prediction.shape=this.value;syncSave()">
+          <option value="" disabled ${!S.prediction.shape?'selected':''}>pick a shape</option>
+          ${["4-3-3","4-2-3-1","4-4-2","4-5-1","3-5-2","3-4-3","5-3-2","back three (vibes)"].map(f=>`<option value="${f}" ${S.prediction.shape===f?'selected':''}>${f}</option>`).join("")}
+        </select>
         <p class="muted" style="font-size:.74rem;margin-top:10px">locks at kickoff · no takebacks 🔒</p>`}
   </div>
 
@@ -1334,6 +1339,14 @@ function tabHis(){return `<section id="tab-his" class="tab pad">
   <div class="spacer"></div>
   <div class="card" id="wagerHimCard" style="border-color:var(--blue2)">
     ${wagerCardContent('him')}
+  </div>
+
+  <div class="spacer"></div>
+  <div class="card" style="border-color:#E07A5F">
+    <div style="font-weight:700;margin-bottom:4px">✉️ a note for Rahman</div>
+    <p class="muted" style="font-size:.8rem;margin-bottom:10px">Opens at the final whistle. She doesn't see it until the recap.</p>
+    <textarea class="note" style="min-height:80px" placeholder="one thing you want her to know about today..."
+      oninput="S.noteToHer=this.value;syncSave()">${esc(S.noteToHer||"")}</textarea>
   </div>
 
   <div class="spacer"></div>
@@ -1393,8 +1406,26 @@ function tabHers(){return `<section id="tab-hers" class="tab pad">
   </div>
 
   <div class="spacer"></div>
+  <div class="card">
+    <div style="font-weight:700;margin-bottom:8px">✨ vibe journal</div>
+    <p class="muted" style="font-size:.8rem;margin-bottom:10px">Quick thoughts, feelings, reactions — anything. Timestamps itself.</p>
+    <textarea class="note" id="vibeIn" placeholder="'oh wow the drums are insane' / 'i have no idea what's happening but i'm into it'..."></textarea>
+    <div class="spacer"></div>
+    <button class="btn ghost" onclick="addVibe()">log it</button>
+    <div id="vibeList" style="margin-top:14px">${renderVibeLog()}</div>
+  </div>
+
+  <div class="spacer"></div>
   <div class="card" id="wagerHerCard" style="border-color:var(--terra)">
     ${wagerCardContent('her')}
+  </div>
+
+  <div class="spacer"></div>
+  <div class="card" style="border-color:#163C6E">
+    <div style="font-weight:700;margin-bottom:4px">✉️ a note for Pathak</div>
+    <p class="muted" style="font-size:.8rem;margin-bottom:10px">Opens at the final whistle. He doesn't see it until the recap.</p>
+    <textarea class="note" style="min-height:80px" placeholder="one thing you want him to know about today..."
+      oninput="S.noteToHim=this.value;syncSave()">${esc(S.noteToHim||"")}</textarea>
   </div>
 
   <div class="spacer"></div>
@@ -1640,6 +1671,19 @@ function openRecap(){
       ${S.quotes.map(q=>`<div class="logline"><div class="meta">${esc(q.who)} · ${esc(q.t)}</div>"${esc(q.text)}"</div>`).join("")}
     </div>`:""}
 
+    ${(S.starredMoments||[]).length>0?`<div class="card" style="margin-bottom:14px">
+      <div style="font-weight:700;margin-bottom:10px">⭐ starred moments</div>
+      ${S.starredMoments.map(m=>`<div class="logline"><div class="meta">${esc(m.t)}</div>you pressed ⭐ right here</div>`).join("")}
+    </div>`:""}
+
+    ${(S.noteToHer||S.noteToHim)?`<div class="card" style="margin-bottom:14px;background:#FFF4E0;border-color:#E07A5F">
+      <div style="font-weight:700;margin-bottom:12px">✉️ notes for the recap</div>
+      ${S.noteToHer?`<p class="muted" style="font-size:.8rem;margin-bottom:4px">from Pathak, to Rahman:</p>
+        <div class="logline" style="font-style:italic">${esc(S.noteToHer)}</div>`:""}
+      ${S.noteToHim?`<p class="muted" style="font-size:.8rem;margin:10px 0 4px">from Rahman, to Pathak:</p>
+        <div class="logline" style="font-style:italic">${esc(S.noteToHim)}</div>`:""}
+    </div>`:""}
+
     <div class="card center" style="margin-bottom:14px;background:#FFF3CC">
       <div style="font-size:1.8rem">⚽</div>
       <p style="font-family:'Fraunces',serif;font-style:italic;margin-top:8px;font-size:1rem">
@@ -1688,10 +1732,12 @@ function tabPlan(){return `<section id="tab-plan" class="tab pad">
 
   <div class="card" style="margin-bottom:12px">
     <div style="font-weight:700;margin-bottom:8px">🌟 players to watch</div>
-    ${PLAYERS.map(p=>`<div style="padding:9px 0;border-bottom:1px solid var(--line)">
+    ${S.jerseyRole==="rahman"?`<p class="muted" style="font-size:.76rem;margin-bottom:10px">tap "use this" to queue a line — it'll pop up so you can deliver it</p>`:""}
+    ${PLAYERS.map((p,i)=>`<div style="padding:9px 0;border-bottom:1px solid var(--line)">
       <div><span class="tag">${TEAMS[p.t].flag} #${p.no}</span> <b>${p.name}</b></div>
       <div class="muted" style="font-size:.84rem;margin:3px 0">${p.blurb}</div>
-      <div style="font-size:.82rem;color:var(--blue2)">💬 "${p.say}"</div>
+      <div style="font-size:.82rem;color:var(--blue2);margin-bottom:${S.jerseyRole==="rahman"?'8':'0'}px">💬 "${p.say}"</div>
+      ${S.jerseyRole==="rahman"?`<button onclick="deploySayThis(${i})" style="font-size:.74rem;font-weight:700;color:var(--terra);background:transparent;border:1px solid var(--terra);border-radius:8px;padding:4px 10px;cursor:pointer">📢 use this line</button>`:''}
     </div>`).join("")}
   </div>
 
@@ -1938,9 +1984,11 @@ function playCardSound(){
 document.addEventListener("touchstart",()=>{try{getAudio();}catch(e){}},{once:true,passive:true});
 
 /* ===================== LIVE FEED (API-Football) ===================== */
-function bumpScore(side){
-  if(side==="col") S.score.h=(S.score.h||0)+1;
-  else S.score.a=(S.score.a||0)+1;
+function bumpScore(side,dec=false){
+  const d=dec?-1:1;
+  if(side==="col") S.score.h=Math.max(0,(S.score.h||0)+d);
+  else S.score.a=Math.max(0,(S.score.a||0)+d);
+  if(dec){syncSave();paintScoreboard();return;}
   const teamName=side==="col"?"colombia":"jordan";
   const ours=isOurGoal(teamName);
   if(ours){confetti();playGoalHorn();}else{playTone(330,.4,"sine",.18);}
@@ -2099,6 +2147,15 @@ function submitQuickQuote(){
   syncSave();flashMascot("That one's a keeper. 📜");
 }
 
+/* ===================== STAR MOMENT ===================== */
+function starMoment(){
+  S.starredMoments.push({t:nowClock()});
+  syncSave();
+  const btn=document.getElementById("starBtn");
+  if(btn){btn.textContent="⭐ saved!";setTimeout(()=>{btn.textContent="⭐ star this moment";},1500);}
+  flashMascot("Locked in. That one's going in the vault. 🌟");
+}
+
 /* ===================== SAY THIS ===================== */
 let sayThisTimer=null;
 function showSayThis(pool){
@@ -2111,6 +2168,24 @@ function showSayThis(pool){
 function closeSayThis(){
   document.getElementById("sayThisCard").classList.remove("show");
   clearTimeout(sayThisTimer);
+}
+function deploySayThis(idx){
+  const p=PLAYERS[idx];if(!p)return;
+  showSayThis([p.say]);
+}
+
+/* ===================== VIBE JOURNAL ===================== */
+function renderVibeLog(){
+  return (S.vibeLog||[]).slice().reverse().map(v=>
+    `<div class="logline"><div class="meta">${esc(v.t)}</div>${esc(v.x)}</div>`).join("")
+    ||`<p class="muted" style="font-size:.85rem">Nothing yet — drop a feeling.</p>`;
+}
+function addVibe(){
+  const v=document.getElementById("vibeIn")?.value.trim();if(!v)return;
+  S.vibeLog.push({x:v,t:nowClock()});
+  document.getElementById("vibeIn").value="";
+  document.getElementById("vibeList").innerHTML=renderVibeLog();
+  syncSave();flashMascot("Logged. The vibe is documented. ✨");
 }
 
 /* ===================== NOTIFICATIONS ===================== */

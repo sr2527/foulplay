@@ -1107,13 +1107,21 @@ function tapMilestone(id){
   if(m){flashMascot(m.react,"celebrate");setTimeout(kickLeg,150);}
   const row=document.getElementById("msRow");
   if(row)row.outerHTML=milestoneRow();
-  // kiss cam: random chance after they're inside (10% chance on any milestone)
-  if(id==="in"||id==="cup"||id==="food"){if(Math.random()<0.25)setTimeout(triggerKissCam,3000);}
+  // kiss cam: only once inside the stadium (not fan fest)
+  if((id==="in"||id==="cup")&&Math.random()<0.25)setTimeout(triggerKissCam,3000);
 }
 
 function tabMatch(){return `<section id="tab-match" class="tab pad">
   <div class="sectitle"><span class="dot"></span><span class="eyebrow">live from snapdragon</span></div>
   <p class="muted" style="font-size:.8rem;margin-bottom:10px">tap each milestone as you hit it</p>
+  ${!S.quizResult&&!isKickoffPassed()?`<div class="card" style="background:#FFF4E0;border-color:#FFD100;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+    <div style="font-size:1.6rem">⚽</div>
+    <div style="flex:1">
+      <div style="font-weight:700;font-size:.9rem">whose side are you on?</div>
+      <div class="muted" style="font-size:.78rem">take the quiz before kickoff so Coach Ball knows who to celebrate with</div>
+    </div>
+    <button onclick="openQuiz()" style="background:var(--blue);color:#fff;font-weight:700;padding:8px 14px;border-radius:12px;font-size:.82rem;border:none;cursor:pointer;flex-shrink:0">quiz →</button>
+  </div>`:``}
   ${milestoneRow()}
   <div id="scoreboard"></div>
   <div id="halftimeCard"></div>
@@ -1187,15 +1195,24 @@ function tabHis(){return `<section id="tab-his" class="tab pad">
 
   <div class="card">
     <div style="font-weight:700;margin-bottom:10px">🔮 pre-match call</div>
-    <label class="muted" style="font-size:.8rem">Predicted scoreline</label>
-    <input class="txt" style="margin:5px 0 12px" value="${esc(S.prediction.score||'')}"
-      placeholder="e.g. Colombia 2–1 Jordan" oninput="S.prediction.score=this.value;syncSave()"/>
-    <label class="muted" style="font-size:.8rem">First goalscorer</label>
-    <input class="txt" style="margin:5px 0 12px" value="${esc(S.prediction.scorer||'')}"
-      placeholder="who finds the net first?" oninput="S.prediction.scorer=this.value;syncSave()"/>
-    <label class="muted" style="font-size:.8rem">Colombia's formation</label>
-    <input class="txt" style="margin:5px 0 0" value="${esc(S.prediction.shape||'')}"
-      placeholder="4-2-3-1? back three?" oninput="S.prediction.shape=this.value;syncSave()"/>
+    ${isKickoffPassed()
+      ?`<p class="muted" style="font-size:.75rem;margin-bottom:10px;font-style:italic">locked at kickoff</p>
+        <div style="font-size:.8rem;color:var(--soft);margin-bottom:6px">Scoreline</div>
+        <div style="font-weight:600;margin-bottom:10px">${esc(S.prediction.score)||'—'}</div>
+        <div style="font-size:.8rem;color:var(--soft);margin-bottom:6px">First goalscorer</div>
+        <div style="font-weight:600;margin-bottom:10px">${esc(S.prediction.scorer)||'—'}</div>
+        <div style="font-size:.8rem;color:var(--soft);margin-bottom:6px">Formation</div>
+        <div style="font-weight:600">${esc(S.prediction.shape)||'—'}</div>`
+      :`<label class="muted" style="font-size:.8rem">Predicted scoreline</label>
+        <input class="txt" style="margin:5px 0 12px" value="${esc(S.prediction.score||'')}"
+          placeholder="e.g. Colombia 2–1 Jordan" oninput="S.prediction.score=this.value;syncSave()"/>
+        <label class="muted" style="font-size:.8rem">First goalscorer</label>
+        <input class="txt" style="margin:5px 0 12px" value="${esc(S.prediction.scorer||'')}"
+          placeholder="who finds the net first?" oninput="S.prediction.scorer=this.value;syncSave()"/>
+        <label class="muted" style="font-size:.8rem">Colombia's formation</label>
+        <input class="txt" style="margin:5px 0 0" value="${esc(S.prediction.shape||'')}"
+          placeholder="4-2-3-1? back three?" oninput="S.prediction.shape=this.value;syncSave()"/>
+        <p class="muted" style="font-size:.74rem;margin-top:10px">locks at kickoff · no takebacks 🔒</p>`}
   </div>
 
   <div class="spacer"></div>
@@ -1259,9 +1276,11 @@ function tabHers(){return `<section id="tab-hers" class="tab pad">
   <p class="muted" style="font-size:.88rem;margin-bottom:16px">Your predictions, Pathak's reactions, and the gems he drops.</p>
 
   <div class="card">
-    <div style="font-weight:700;margin-bottom:10px">🔮 will he, won't he</div>
-    ${HER_PRED.map((p,i)=>`<label style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer">
-      <input type="checkbox" ${S.herPred[i]?'checked':''} onchange="S.herPred[${i}]=this.checked;syncSave()"
+    <div style="font-weight:700;margin-bottom:4px">🔮 will he, won't he</div>
+    <p class="muted" style="font-size:.74rem;margin-bottom:10px">${isKickoffPassed()?'predictions sealed at kickoff 🔒':'predict before the game — locks at kickoff'}</p>
+    ${HER_PRED.map((p,i)=>`<label style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);${isKickoffPassed()?'cursor:default':'cursor:pointer'}">
+      <input type="checkbox" ${S.herPred[i]?'checked':''} ${isKickoffPassed()?'disabled':''}
+        onchange="S.herPred[${i}]=this.checked;syncSave()"
         style="width:22px;height:22px;accent-color:var(--blue);flex-shrink:0"/>
       <span style="font-weight:600;font-size:.9rem">${p}</span>
     </label>`).join("")}
@@ -1314,20 +1333,14 @@ function tabPlay(){return `<section id="tab-play" class="tab pad">
 
   <div class="divider"></div>
   <h2 class="h2" style="margin-bottom:4px">📸 photo missions</h2>
-  <p class="muted" style="font-size:.86rem;margin-bottom:4px"><span id="photoCount"></span> — tap to snap within the app.</p>
+  <p class="muted" style="font-size:.86rem;margin-bottom:4px"><span id="photoCount">tap to snap within the app</span></p>
   <p class="muted" style="font-size:.76rem;margin-bottom:12px">grainy is the vibe 🌾 · photos sync between phones when the payload is small enough · always on your device regardless</p>
   ${PHOTOS.map(p=>photoCell(p)).join("")}
 
   <div class="divider"></div>
   <h2 class="h2" style="margin-bottom:4px">💬 the quote wall</h2>
-  <p class="muted" style="font-size:.86rem;margin-bottom:12px">Everything worth remembering from today.</p>
-  <div class="card">
-    <input class="txt" id="qWho" placeholder="who said it?" style="margin-bottom:8px"/>
-    <textarea class="note" id="qText" placeholder="the quote..."></textarea>
-    <div class="spacer"></div>
-    <button class="btn" onclick="addQuote()">add to wall</button>
-  </div>
-  <div id="quoteWall" style="margin-top:14px">${renderQuotes()}</div>
+  <p class="muted" style="font-size:.86rem;margin-bottom:12px">Everything worth remembering. Use the 💬 button to add.</p>
+  <div id="quoteWall">${renderQuotes()||`<p class="muted" style="font-size:.85rem;text-align:center;padding:20px 0">Nothing yet — tap 💬 to log the first gem.</p>`}</div>
 
   <div class="divider"></div>
   <button class="btn alt" onclick="openRecap()">🏆 game day recap + report cards</button>
@@ -1379,7 +1392,7 @@ function photoCell(p){
 function updatePhotoCount(){
   const done=PHOTOS.filter(p=>S.photos[p.id]).length;
   const el=document.getElementById("photoCount");
-  if(el)el.textContent=`${done}/${PHOTOS.length} captured`;
+  if(el)el.textContent=done===0?`tap to snap within the app`:done===1?`1 captured so far`:`${done} captured so far`;
 }
 
 function renderQuotes(){
@@ -1902,6 +1915,7 @@ function isOurGoal(teamName){
   return prefer==="col"?col:!col;
 }
 function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function isKickoffPassed(){return S.lastStatus&&["1H","HT","2H","ET","PEN","FT","AET","ABD"].includes(S.lastStatus);}
 function nowClock(){const d=new Date();let h=d.getHours(),m=d.getMinutes();const ap=h>=12?"PM":"AM";h=h%12||12;const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];return mo+" "+d.getDate()+" · "+h+":"+(m<10?"0":"")+m+" "+ap;}
 function hideNav(){document.getElementById("nav").style.display="none";}
 function showNav(){document.getElementById("nav").style.display="flex";}
@@ -1928,7 +1942,7 @@ function triggerKissCam(){
   document.getElementById("kissCam").classList.add("show");
   flashMascot("KISS CAM! You've been selected. No backing out. 💋");
 }
-function closeKissCam(){document.getElementById("kissCam").classList.remove("show");}
+function closeKissCam(){document.getElementById("kissCam").classList.remove("show");kissCamArmed=false;}
 function snapKissCam(input){
   if(!input){document.getElementById("kissCamInput").click();return;}
   const file=input.files[0];if(!file)return;

@@ -354,11 +354,12 @@ const QUOTES = [
   "I think the truth is, deep down, we're all just lookin' to be seen."
 ];
 const REACT = {
-  kickoff:["Here we go! I solemnly swear I know almost nothin' about this sport, but I am FIRED UP. 🔥","Kickoff baby. Onward. Forward!","Football is life and today it's YOUR life too. Let's get it!"],
-  ourGoal:["FOOTBALL IS LIFE!!! Did y'all SEE that?! 🎉","That right there is what hope looks like. GOOOAL! 🎉","I'm not crying, YOU'RE crying. GOAL!!!","GET IN! They are cooking today! 🔥"],
-  theirGoal:["Okay okay — be a goldfish. 10-second memory. We move on, together. 🐠","Every disadvantage has its advantage. Heads up.","That's alright — it's a long ol' game and we got each other."],
-  half:["Halftime! Go stretch them legs and refill that fancy cup. ☕","It ain't about the score at the half. It's about who shows up in the second.","Rest up, you two. Best seat in the house for the second half."],
-  full:["Win or lose, y'all showed up for each other today. That's the whole ballgame. ❤️","Final whistle. Now go get them tacos. The loser's buying. 🌮","Proud of ya. Both of ya. Now go live your life."],
+  kickoff:["¡Arriba! I solemnly swear I know almost nothin' about this sport, but I am FIRED UP. 🔥","Yalla, kickoff! Onward. Forward!","Football is life and today it's YOUR life too. Let's get it!"],
+  colGoal:["¡GOLAZO! Los Cafeteros are COOKING! Did y'all SEE that?! 🇨🇴🔥","That right there is what hope looks like. ¡Gooool Colombia! I'm not crying, you're crying. 🎉","¡VAMOS Los Cafeteros! South American flair on full display today! ☕","¡Qué golazo! GET IN! Football is life and that goal was LIFE! 🏆"],
+  jorGoal:["يلا النشامى! Al-Nashama STRIKES! The underdogs are alive and COOKING! 🇯🇴🔥","Yalla yalla YALLA! Jordan delivers! Nobody believed in them and HERE THEY ARE! 🎉","Mashallah, that was beautiful football. Al-Nashama shows up! 🇯🇴","GOAL Al-Nashama! يلا! The whole stadium felt that one! 🔥"],
+  theirGoal:["Okay okay — be a goldfish. 10-second memory. We move on, together. 🐠","Every disadvantage has its advantage. Heads up.","That's alright — it's a long ol' game and we got each other.","Be a goldfish. Ten seconds. We're fine. 🐠"],
+  half:["Halftime! ¡Qué partido! Go stretch them legs and refill that fancy cup. ☕","It ain't about the score at the half. It's about who shows up in the second.","Rest up, you two. Best seat in the house for the second half."],
+  full:["Win or lose, y'all showed up for each other today. That's the whole ballgame. ❤️","Final whistle. ¡Qué día! Now go get them tacos. The loser's buying. 🌮","Proud of ya. Both of ya. Now go live your life."],
   card:["Ref's gotta ref. Don't let it live rent-free in your head.","Be a goldfish about it. 🐠","Whistle's just a fella with a job."],
   var:["They're checkin' the tape. Patience — it's a virtue AND a Tom Petty song.","VAR: technology ruining beautiful moments since forever. Be a goldfish."]
 };
@@ -569,8 +570,9 @@ async function pollSync(){
       if(S.events.length>prevEvents){
         const newest=S.events[S.events.length-1];
         if(newest&&newest.icon==="⚽"){
+          const colScored2=newest.title.toLowerCase().includes("colombia");
           const ours=isOurGoal(newest.title);
-          if(ours)confetti();flashMascot(rand(ours?REACT.ourGoal:REACT.theirGoal),ours?"goal":null);
+          if(ours)confetti();flashMascot(rand(ours?(colScored2?REACT.colGoal:REACT.jorGoal):REACT.theirGoal),ours?"goal":null);
         }
       }
       if(JSON.stringify(S.score)!==prevScore&&document.getElementById("tab-match")){
@@ -1803,7 +1805,7 @@ async function pollNow(){
     S.events.forEach(e=>{
       if(!S.seenEvents.includes(e.key)){
         S.seenEvents.push(e.key);
-        if(e.icon==="⚽"){const ours=isOurGoal(e.title);if(ours)confetti();flashMascot(rand(ours?REACT.ourGoal:REACT.theirGoal),ours?"goal":null);}
+        if(e.icon==="⚽"){const colG=e.title.toLowerCase().includes("colombia");const ours=isOurGoal(e.title);if(ours)confetti();flashMascot(rand(ours?(colG?REACT.colGoal:REACT.jorGoal):REACT.theirGoal),ours?"goal":null);}
         else if(e.icon==="🟨"||e.icon==="🟥")flashMascot(rand(REACT.card));
       }
     });

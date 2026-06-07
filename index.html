@@ -521,7 +521,7 @@ const QUIZ_Q=[
 let S = {
   // jersey entry
   jerseyRole:null, // "pathak" | "rahman"
-  pathakQs:{}, pathakQsDone:false, sheSaidYes:false, disclaimerAccepted:false,
+  pathakQs:{}, pathakQsDone:false, sheSaidYes:false, disclaimerAccepted:false, soloMode:false,
   // session
   binId:null, role:null, // "host" or "guest"
   // onboarding
@@ -556,6 +556,7 @@ function loadLocal(){
   S.pathakQsDone=ls("pathakQsDone",false);
   S.sheSaidYes=ls("sheSaidYes",false);
   S.disclaimerAccepted=ls("disclaimerAccepted",false);
+  S.soloMode=ls("soloMode",false);
   S.smsOpened=ls("smsOpened",false);
   S.fixtureId=ls("fixtureId",null);
   S.homeIsCol=ls("homeIsCol",true);
@@ -574,6 +575,7 @@ function saveLocal(){
   lsSet("pathakQsDone",S.pathakQsDone);
   lsSet("sheSaidYes",S.sheSaidYes);
   lsSet("disclaimerAccepted",S.disclaimerAccepted);
+  lsSet("soloMode",S.soloMode);
   lsSet("smsOpened",S.smsOpened);
   lsSet("fixtureId",S.fixtureId);lsSet("homeIsCol",S.homeIsCol);
   lsSet("photos",S.photos);lsSet("milestones",S.milestones);
@@ -604,7 +606,7 @@ function applySyncPayload(o){
 
 let syncDebounce=null;
 async function pushSync(){
-  if(!S.binId)return;
+  if(!S.binId||S.soloMode)return;
   clearTimeout(syncDebounce);
   syncDebounce=setTimeout(async()=>{
     try{
@@ -624,7 +626,7 @@ async function pushSync(){
 
 let pollInterval=null;
 async function pollSync(){
-  if(!S.binId)return;
+  if(!S.binId||S.soloMode)return;
   try{
     const r=await fetch(`${BIN_BASE}/${S.binId}/latest`,{headers:{"X-Master-Key":BIN_KEY}});
     const j=await r.json();
@@ -705,13 +707,13 @@ function render(){
     if(!S.pathakQsDone){renderPathakOnboard();hide();return;}
     if(!S.sheSaidYes){renderSurpriseReveal();hide();return;}
     if(!S.disclaimerAccepted){renderDisclaimer();hide();return;}
-    if(!S.binId){renderHostSession();hide();return;}
+    if(!S.binId&&!S.soloMode){renderHostSession();hide();return;}
     if(!S.onboarded){S.onboarded=true;saveLocal();}  // he planned the day — skip re-asking
   }
   // step 3: rahman flow
   if(S.jerseyRole==="rahman"){
-    if(!S.binId){renderRahmanJoin();hide();return;}
-    if(!S.rahmanWelcomed){renderRahmanWelcome();hide();return;}
+    if(!S.binId&&!S.soloMode){renderRahmanJoin();hide();return;}
+    if(!S.rahmanWelcomed&&!S.soloMode){renderRahmanWelcome();hide();return;}
   }
   show();
   renderMain();
@@ -997,6 +999,10 @@ function renderHostSession(){
     </p>
     <button class="btn alt" onclick="doCreate()" id="createBtn">create session →</button>
     <p class="muted" style="font-size:.76rem;margin-top:10px">share the code with Rahman when it appears</p>
+    <div class="divider" style="margin:24px 0"></div>
+    <p class="muted" style="font-size:.78rem;margin-bottom:10px">no wifi? stadium signal being weird?</p>
+    <button class="btn ghost" onclick="activateSoloMode()" style="font-size:.88rem">📵 go solo mode</button>
+    <p class="muted" style="font-size:.72rem;margin-top:8px;max-width:240px">everything still works locally — no sync with Rahman's phone</p>
   </div>`;
 }
 
@@ -1011,6 +1017,10 @@ function renderRahmanJoin(){
     <div class="spacer"></div>
     <button class="btn" id="joinBtn" onclick="doJoin()">let's go →</button>
     <button class="btn ghost" style="margin-top:10px" onclick="S.jerseyRole=null;S.role=null;saveLocal();render()">← back</button>
+    <div class="divider" style="margin:24px 0"></div>
+    <p class="muted center" style="font-size:.78rem;margin-bottom:10px">code not working? no signal?</p>
+    <button class="btn ghost" onclick="activateSoloMode()" style="font-size:.88rem">📵 go solo mode</button>
+    <p class="muted center" style="font-size:.72rem;margin-top:8px">everything still works on your phone — no sync with Pathak</p>
   </div>`;
 }
 
@@ -1070,7 +1080,7 @@ async function doCreate(){
     saveLocal();startPolling();
     render();
     flashMascot("Session created! Share the code with the other phone. I'll be here.");
-  }catch(e){alert("Network error. Try again!");document.getElementById("createBtn").disabled=false;document.getElementById("createBtn").textContent="create session →";}
+  }catch(e){const b=document.getElementById("createBtn");if(b){b.disabled=false;b.textContent="↻ retry";}flashMascot("Can't connect — tap solo mode below if it keeps failing. ⚠️");}
 }
 
 async function doJoin(){
@@ -1080,12 +1090,27 @@ async function doJoin(){
   document.getElementById("joinBtn").disabled=true;
   try{
     const ok=await joinBin(code);
-    if(!ok){alert("Couldn't find that session — double check the code.");document.getElementById("joinBtn").disabled=false;document.getElementById("joinBtn").textContent="join →";return;}
+    if(!ok){const b=document.getElementById("joinBtn");if(b){b.disabled=false;b.textContent="join →";}flashMascot("Can't find that session — check the code, or tap solo mode below. ⚠️");return;}
     S.binId=code;S.role="guest";S.onboarded=true;
     saveLocal();startPolling();
     findFixture().then(()=>pollNow());
     render(); // will hit rahmanWelcome screen
-  }catch(e){alert("Network error.");document.getElementById("joinBtn").disabled=false;document.getElementById("joinBtn").textContent="join →";}
+  }catch(e){const b=document.getElementById("joinBtn");if(b){b.disabled=false;b.textContent="join →";}flashMascot("Network error — try again or tap solo mode below. ⚠️");}
+}
+
+function activateSoloMode(){
+  S.soloMode=true;
+  S.onboarded=true;
+  if(S.jerseyRole==="rahman"){S.rahmanWelcomed=true;}
+  saveLocal();render();
+  setTimeout(()=>flashMascot("Solo mode. Everything local still works. Football is life. ⚽"),400);
+}
+function exitSoloMode(){
+  S.soloMode=false;
+  S.binId=null;
+  S.onboarded=false;
+  if(S.jerseyRole==="rahman")S.rahmanWelcomed=false;
+  saveLocal();render();
 }
 
 function copyCode(){
@@ -1654,7 +1679,15 @@ function tabPlan(){return `<section id="tab-plan" class="tab pad">
     </p>
   </div>
 
-  <div class="card">
+  ${S.soloMode
+    ?`<div class="card" style="border-color:var(--terra)">
+    <div style="font-weight:700;margin-bottom:6px">📵 solo mode</div>
+    <p class="muted" style="font-size:.82rem;margin-bottom:8px">Running without sync. All features work locally — score bumps, photos, bets, notes, recap. No cross-phone data.</p>
+    <p class="muted" style="font-size:.78rem;margin-bottom:12px">If you get signal later, you can try to reconnect:</p>
+    <button class="btn ghost" style="margin-bottom:10px" onclick="exitSoloMode()">↻ try to reconnect</button>
+    <button class="btn red" onclick="resetSession()">reset (start over)</button>
+  </div>`
+    :`<div class="card">
     <div style="font-weight:700;margin-bottom:6px">🔗 session</div>
     <p class="muted" style="font-size:.82rem;margin-bottom:8px">Share this link with Rahman — she opens it and syncs automatically:</p>
     <div class="code-box" style="font-size:.72rem;letter-spacing:.03em;word-break:break-all;padding:14px" onclick="copyLink()">${S.binId?`https://sr2527.github.io/foulplay/?join=${S.binId}`:"—"}</div>
@@ -1665,7 +1698,7 @@ function tabPlan(){return `<section id="tab-plan" class="tab pad">
     </div>
     <div class="spacer"></div>
     <button class="btn red" onclick="resetSession()">reset session (start over)</button>
-  </div>
+  </div>`}
   <div style="height:30px"></div>
   <p class="center muted" style="font-size:.76rem">made for one very good soccer afternoon ⚽</p>
 </section>`;}

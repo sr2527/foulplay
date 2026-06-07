@@ -1381,6 +1381,9 @@ function tabHers(){return `<section id="tab-hers" class="tab pad">
   <h2 class="h2">Rahman ✨</h2>
   <p class="muted" style="font-size:.88rem;margin-bottom:16px">Your predictions, Pathak's reactions, and the gems he drops.</p>
 
+  ${quizResultCard()}
+
+  <div class="spacer"></div>
   <div class="card" id="wagerHerCard" style="border-color:var(--terra)">
     ${wagerCardContent('her')}
   </div>
@@ -1430,8 +1433,6 @@ function tabHers(){return `<section id="tab-hers" class="tab pad">
       oninput="S.noteToHim=this.value;syncSave()">${esc(S.noteToHim||"")}</textarea>
   </div>
 
-  <div class="spacer"></div>
-  ${quizResultCard()}
 </section>`;}
 
 function addHisQuote(){

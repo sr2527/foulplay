@@ -885,7 +885,7 @@ function buildSurpriseText(){
 }
 
 function surpriseSMSLink(txt){
-  return `sms:9166777839;body=${encodeURIComponent(txt)}`;
+  return `sms:+19166777839&body=${encodeURIComponent(txt)}`;
 }
 
 function markSmsOpened(){S.smsOpened=true;saveLocal();const b=document.getElementById("sheYesBtn");if(b){b.disabled=false;b.style.opacity="1";}const n=document.getElementById("sendFirst");if(n)n.style.display="none";}
@@ -899,7 +899,8 @@ function renderSurpriseReveal(){
     <div class="msg-bubble">${nl2br(txt)}</div>
     <div class="spacer"></div>
     <a class="btn alt" href="${smsUrl}" style="text-decoration:none" onclick="markSmsOpened()">💌 open in messages →</a>
-    <p class="muted center" style="font-size:.76rem;margin:8px 0 18px">opens a pre-written text to Rahman · edit before sending</p>
+    <button class="btn ghost" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText(${JSON.stringify(txt)});markSmsOpened();flashMascot('Copied — paste it into a new message to Rahman. 📋')">📋 copy text instead</button>
+    <p class="muted center" style="font-size:.76rem;margin:8px 0 18px">open in messages or copy + paste manually</p>
     <button class="btn" id="sheYesBtn" onclick="renderSheYes()" ${S.smsOpened?'':'disabled'} style="${S.smsOpened?'':'opacity:.45'}">she said YES 💛</button>
     ${S.smsOpened?'':'<p class="muted center" id="sendFirst" style="font-size:.76rem;margin-top:4px">send the text first 👆</p>'}
     <button class="btn ghost" style="margin-top:10px" onclick="renderSheNo()">still working on it... 😬</button>
@@ -912,7 +913,7 @@ function renderSheYes(){
   const codeBody=S.binId
     ?`okay so 👀👀✨✨\n\ni just so happened to stumble upon this app called foulplay ⚽🏟️🤯 and it is SUSPICIOUSLY custom made for us?? 😳🤨😅🙈\n\nlike whoever built this clearly spent 8,000,000 hours 😭😭🙏🙏 and somehow knew exactly what i would want — live scoreboard 📊, tactical log 📋, formation predictions 🧠, a whole corner to write my reads in real time ✍️ — almost like they knew i could have gone pro ⚽🌟👟 in case u forgot.\n\nBUT ALSO there's a mascot 🏆🫶 and photo missions 📸 and a vibe quiz for you 🎯✨🥰 bc the developer apparently said "she will need something to do while he analyzes the pressing structure" 🧐 which. very thoughtful of them.\n\nthe app literally has our jersey numbers 🔢🤯 our names 😳😭 i'm starting to connect some dots here 🕵️‍♀️ —\n\nanyway:\n${appUrl}\n\n(backup code if the link doesn't work: ${S.binId}) 🔑\n\nwoweeee 🎊🎉🥳🎈✨ lucky us honestly!! what are the ODDS 😇✨🌟💛`
     :`okay so 👀👀✨✨\n\ni just so happened to stumble upon this app called foulplay ⚽🏟️🤯 and it is SUSPICIOUSLY custom made for us?? 😳🤨😅🙈\n\nlike whoever built this clearly spent 8,000,000 hours 😭😭🙏🙏 and somehow knew exactly what i would want — live scoreboard 📊, tactical log 📋, formation predictions 🧠 — almost like they knew i could have gone pro ⚽🌟👟 in case u forgot.\n\nBUT ALSO there's a mascot 🏆🫶 and photo missions 📸 and a vibe quiz for you 🎯✨🥰 bc the developer apparently said "she will need something to do while he analyzes the pressing structure" 🧐\n\nthe app literally has our jersey numbers 🔢 i'm starting to connect some dots — 🕵️‍♀️🤨\n\nhttps://sr2527.github.io/foulplay/\n\nwoweeee 🎊🎉🥳🎈✨ lucky us!! what are the ODDS 😇✨🌟💛`;
-  const codeSMS=`sms:9166777839;body=${encodeURIComponent(codeBody)}`;
+  const codeSMS=`sms:+19166777839&body=${encodeURIComponent(codeBody)}`;
   $app().innerHTML=`<div class="screen">
     <div style="font-size:2.8rem;text-align:center">🎉</div>
     <h2 class="h2" style="text-align:center;margin:12px 0 6px">SHE SAID YES.</h2>
@@ -920,7 +921,8 @@ function renderSheYes(){
     <div class="msg-bubble" style="font-size:.88rem">${nl2br(codeBody)}</div>
     <div class="spacer"></div>
     <a class="btn alt" href="${codeSMS}" style="text-decoration:none">📲 send her the code →</a>
-    <p class="muted center" style="font-size:.76rem;margin:8px 0 18px">opens a pre-written text · edit before sending</p>
+    <button class="btn ghost" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText(${JSON.stringify(codeBody)});flashMascot('Copied — paste into messages to Rahman. 📋')">📋 copy text instead</button>
+    <p class="muted center" style="font-size:.76rem;margin:8px 0 18px">open in messages or copy + paste manually</p>
     <button class="btn" onclick="S.sheSaidYes=true;saveLocal();render()">she's got it — let's go ⚽</button>
   </div>`;
   flashMascot("YESSSSS! She said yes! Coach Ball is so proud of you. 🎉");
@@ -1619,7 +1621,7 @@ function openRecap(){
     return `${name.toUpperCase()}'S FOULPLAY REPORT CARD\n${title}\n\n`+grades.map(g=>`${g.k}: ${g.v}`).join('\n')+`\n\n"${verdict}" — Coach Ball ⚽`;
   }
   function gradeCard(name,title,grades,verdict,color){
-    const sms=`sms:9166777839;body=${encodeURIComponent(cardSMSText(name,title,grades,verdict))}`;
+    const sms=`sms:+19166777839&body=${encodeURIComponent(cardSMSText(name,title,grades,verdict))}`;
     return `<div class="card" style="margin-bottom:14px;border-color:${color}">
       <div class="eyebrow" style="color:${color}">${name}'s report card</div>
       <div class="h2" style="margin:4px 0 12px">${title}</div>

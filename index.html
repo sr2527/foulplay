@@ -251,10 +251,15 @@ input.txt:focus{border-color:var(--blue);outline:none}
   background:var(--terra);color:#fff;font-size:1.1rem;box-shadow:0 4px 14px rgba(0,0,0,.22);
   display:none;align-items:center;justify-content:center;border:3px solid #fff}
 #quickQuote.show{display:flex;animation:pop .2s ease}
+/* floating photo */
+#quickPhoto{position:fixed;right:20px;bottom:158px;z-index:62;width:44px;height:44px;border-radius:50%;
+  background:var(--blue);color:#fff;font-size:1.1rem;box-shadow:0 4px 14px rgba(0,0,0,.22);
+  display:none;align-items:center;justify-content:center;border:3px solid #fff}
+#quickPhoto.show{display:flex;animation:pop .2s ease}
 
-/* quick quote modal */
-#quickModal{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.5);display:none;align-items:flex-end}
-#quickModal.show{display:flex;animation:fade .2s ease}
+/* quick modals */
+#quickModal,#photoModal{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.5);display:none;align-items:flex-end}
+#quickModal.show,#photoModal.show{display:flex;animation:fade .2s ease}
 .qm-sheet{background:#fff;width:100%;max-width:520px;margin:0 auto;
   border-radius:24px 24px 0 0;padding:24px 20px calc(40px + env(safe-area-inset-bottom))}
 
@@ -313,7 +318,16 @@ input.txt:focus{border-color:var(--blue);outline:none}
     <div class="m-leg"><div class="m-shin"></div><div class="m-shoe"></div></div>
   </div>
 </div>
+<button id="quickPhoto" onclick="openQuickPhoto()">📷</button>
 <button id="quickQuote" onclick="openQuickQuote()">💬</button>
+<div id="photoModal" onclick="closeQuickPhoto()">
+  <div class="qm-sheet" onclick="event.stopPropagation()" style="max-height:70vh;overflow-y:auto">
+    <div style="font-weight:700;font-size:1.05rem;margin-bottom:4px">📷 photo missions</div>
+    <p class="muted" style="font-size:.76rem;margin-bottom:14px">tap to open camera</p>
+    <div id="photoModalList"></div>
+    <button class="btn ghost" style="margin-top:12px" onclick="closeQuickPhoto()">close</button>
+  </div>
+</div>
 <div id="quickModal" onclick="closeQuickQuote()">
   <div class="qm-sheet" onclick="event.stopPropagation()">
     <div style="font-weight:700;font-size:1.05rem;margin-bottom:12px">💬 quick quote</div>
@@ -701,7 +715,7 @@ const $app=()=>document.getElementById("app");
 
 function render(){
   const nav=document.getElementById("nav");
-  const hide=()=>{nav.style.display="none";document.getElementById("quickQuote")?.classList.remove("show");};
+  const hide=()=>{nav.style.display="none";document.getElementById("quickQuote")?.classList.remove("show");document.getElementById("quickPhoto")?.classList.remove("show");};
   const show=()=>nav.style.display="flex";
   // step 1: jersey picker
   if(!S.jerseyRole){renderJerseyPicker();hide();return;}
@@ -1172,6 +1186,7 @@ function renderMain(){
   tallyBets();
   updatePhotoCount();
   document.getElementById("quickQuote")?.classList.add("show");
+  document.getElementById("quickPhoto")?.classList.add("show");
 }
 
 /* ===================== MATCH TAB ===================== */
@@ -2136,6 +2151,24 @@ function isKickoffPassed(){return S.lastStatus&&["1H","HT","2H","ET","PEN","FT",
 function nowClock(){const d=new Date();let h=d.getHours(),m=d.getMinutes();const ap=h>=12?"PM":"AM";h=h%12||12;const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];return mo+" "+d.getDate()+" · "+h+":"+(m<10?"0":"")+m+" "+ap;}
 function hideNav(){document.getElementById("nav").style.display="none";}
 function showNav(){document.getElementById("nav").style.display="flex";}
+
+/* ===================== QUICK PHOTO ===================== */
+function openQuickPhoto(){
+  const list=document.getElementById("photoModalList");
+  if(list){
+    list.innerHTML=PHOTOS.map(p=>{
+      const done=!!S.photos[p.id];
+      const cap=FRONT_CAM_PHOTOS.has(p.id)?"user":"environment";
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="document.getElementById('qph-${p.id}').click()">
+        <span style="font-size:1.2rem">${done?"✅":"📷"}</span>
+        <div style="flex:1"><div style="font-weight:600;font-size:.9rem">${p.cap}</div><div class="muted" style="font-size:.76rem">${p.hint}</div></div>
+        <input type="file" id="qph-${p.id}" accept="image/*" capture="${cap}" style="display:none" onchange="snap('${p.id}',this);closeQuickPhoto()"/>
+      </div>`;
+    }).join("");
+  }
+  document.getElementById("photoModal").classList.add("show");
+}
+function closeQuickPhoto(){document.getElementById("photoModal").classList.remove("show");}
 
 /* ===================== QUICK QUOTE ===================== */
 function openQuickQuote(){document.getElementById("quickModal").classList.add("show");setTimeout(()=>document.getElementById("qqText")?.focus(),100);}

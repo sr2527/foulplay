@@ -100,7 +100,7 @@ input,textarea{font-family:inherit;font-size:1rem}
 .feed-item:last-child{border-bottom:none}
 
 /* mascot */
-#mascot-outer{position:fixed;right:0;bottom:76px;z-index:60;display:flex;flex-direction:column;
+#mascot-outer{position:fixed;left:8px;bottom:76px;z-index:60;display:flex;flex-direction:column;
   align-items:center;animation:bob 2.4s ease-in-out infinite;pointer-events:none}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .m-mid{display:flex;align-items:center} /* arms + ball row */
@@ -136,8 +136,8 @@ input,textarea{font-family:inherit;font-size:1rem}
 .mmouth{width:26px;height:13px;border:3px solid #111;border-top:none;border-radius:0 0 26px 26px;transition:all .25s}
 .mmouth.sad{border-top:3px solid #111;border-bottom:none;border-radius:26px 26px 0 0;margin-top:5px}
 .mmouth.shocked{width:14px;height:14px;border:3px solid #111;border-radius:50%}
-#bubble{position:fixed;right:24px;bottom:194px;z-index:61;max-width:260px;background:#fff;
-  border:2px solid var(--blue);border-radius:18px 18px 4px 18px;padding:14px 16px;
+#bubble{position:fixed;left:24px;bottom:194px;z-index:61;max-width:260px;background:#fff;
+  border:2px solid var(--blue);border-radius:18px 18px 18px 4px;padding:14px 16px;
   box-shadow:var(--shadow);display:none}
 #bubble.show{display:block;animation:pop .25s ease}
 #bubble .who{font-size:.68rem;letter-spacing:1px;text-transform:uppercase;color:var(--terra);
@@ -150,7 +150,7 @@ input,textarea{font-family:inherit;font-size:1rem}
   background:rgba(255,248,238,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);
   display:none;flex;z-index:50;padding:8px 2px calc(8px + env(safe-area-inset-bottom))}
 #nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;
-  font-size:.62rem;font-weight:600;color:var(--soft)}
+  font-size:.72rem;font-weight:600;color:var(--soft)}
 #nav button .ic{font-size:1.3rem;opacity:.7;transition:transform .15s}
 #nav button.on{color:var(--blue)}
 #nav button.on .ic{opacity:1;transform:translateY(-2px)}
@@ -240,7 +240,7 @@ input.txt:focus{border-color:var(--blue);outline:none}
 .ms-time{font-size:.56rem;color:#388e3c;font-weight:700}
 
 /* floating quote */
-#quickQuote{position:fixed;right:120px;bottom:106px;z-index:62;width:44px;height:44px;border-radius:50%;
+#quickQuote{position:fixed;right:20px;bottom:106px;z-index:62;width:44px;height:44px;border-radius:50%;
   background:var(--terra);color:#fff;font-size:1.1rem;box-shadow:0 4px 14px rgba(0,0,0,.22);
   display:none;align-items:center;justify-content:center;border:3px solid #fff}
 #quickQuote.show{display:flex;animation:pop .2s ease}
@@ -455,7 +455,10 @@ let S = {
   // synced but kept compact
   photos:{}, milestones:{},
   wagerHer:"", wagerHim:"", wagerRevealed:false,
-  lastSync:0, remoteTs:0
+  quizResult:null,
+  lastSync:0, remoteTs:0,
+  // local only flags
+  rahmanWelcomed:false, smsOpened:false
 };
 
 function ls(k,fb){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch(e){return fb}}
@@ -466,6 +469,7 @@ function loadLocal(){
   S.pathakQs=ls("pathakQs",{});
   S.pathakQsDone=ls("pathakQsDone",false);
   S.sheSaidYes=ls("sheSaidYes",false);
+  S.smsOpened=ls("smsOpened",false);
   S.fixtureId=ls("fixtureId",null);
   S.homeIsCol=ls("homeIsCol",true);
   S.photos=ls("photos",{});
@@ -475,22 +479,27 @@ function loadLocal(){
   S.binId=ls("binId",null);
   S.role=ls("role",null);
   S.tab=ls("tab","match");
+  S.rahmanWelcomed=ls("rahmanWelcomed",false);
+  S.quizResult=ls("quizResult",null);
 }
 function saveLocal(){
   lsSet("jerseyRole",S.jerseyRole);
   lsSet("pathakQs",S.pathakQs);
   lsSet("pathakQsDone",S.pathakQsDone);
   lsSet("sheSaidYes",S.sheSaidYes);
+  lsSet("smsOpened",S.smsOpened);
   lsSet("fixtureId",S.fixtureId);lsSet("homeIsCol",S.homeIsCol);
   lsSet("photos",S.photos);lsSet("milestones",S.milestones);
   lsSet("onboarded",S.onboarded);lsSet("answers",S.answers);
   lsSet("binId",S.binId);lsSet("role",S.role);lsSet("tab",S.tab);
+  lsSet("rahmanWelcomed",S.rahmanWelcomed);
+  lsSet("quizResult",S.quizResult);
 }
 
 /* ===================== JSONBIN SYNC ===================== */
 const SYNC_FIELDS=["score","statusText","lastStatus","events","seenEvents","herLog","hisLog",
   "herPred","hisPred","betHer","betHim","betResult","commentary","quotes","prediction","ratings",
-  "wagerHer","wagerHim","wagerRevealed","milestones"];
+  "wagerHer","wagerHim","wagerRevealed","milestones","quizResult"];
 // photos synced separately with size check (added dynamically in pushSync)
 
 function getSyncPayload(){
@@ -606,6 +615,7 @@ function render(){
   // step 3: rahman flow
   if(S.jerseyRole==="rahman"){
     if(!S.binId){renderRahmanJoin();hide();return;}
+    if(!S.rahmanWelcomed){renderRahmanWelcome();hide();return;}
   }
   show();
   renderMain();
@@ -709,6 +719,8 @@ function pqPick(key,val){
   }else{saveLocal();renderPathakOnboard();}
 }
 
+function pqBack(){if(pqStep>0){pqStep--;renderPathakOnboard();}}
+
 function renderPathakOnboard(){
   if(pqStep<PATHAK_QS.length){
     const q=PATHAK_QS[pqStep];
@@ -717,6 +729,7 @@ function renderPathakOnboard(){
       <div class="eyebrow">PATHAK · question ${pqStep+1} of ${PATHAK_QS.length}</div>
       <h1 class="h1" style="margin:8px 0 22px;font-size:1.5rem">${q.q}</h1>
       ${q.opts.map(([label,val])=>`<button class="opt" onclick="pqPick('${q.key}','${val}')">${label}</button>`).join("")}
+      ${pqStep>0?`<button class="btn ghost" style="margin-top:10px" onclick="pqBack()">← back</button>`:''}
     </div>`;
   }else{
     // questions done, session creating in background
@@ -733,6 +746,7 @@ function buildSurpriseText(){
   const e=S.pathakQs.energy||"solid";
   const w=S.pathakQs.work||"none";
   const b=S.pathakQs.move||"bold";
+
   const opener=e==="locked in"
     ?"okay so. i'm not usually good at this but i feel weirdly brave today and i need to say something before that goes away —"
     :e==="fumes"
@@ -740,19 +754,41 @@ function buildSurpriseText(){
     :e==="depends"
     ?"okay so. the coffee kicked in and so did a feeling and now here we are —"
     :"okay so. i need to say something and if i think about it too long i won't say it so —";
+
   const workBit=w==="stressed"||w==="little"
-    ?"\n\ni know i've had a lot going on in my head lately. i want today to be different. like intentionally put-the-phone-down different."
+    ?"\n\ni know i've had a lot going on lately. i want today to be different. like intentionally put-the-phone-down different."
     :"";
-  const coreBit=`\n\ni really want to hang out with you today\n\nlike... a lot\n\nalso separately: i love soccer. like. genuinely a lot.\n\nand then it hit me — what if both of those things happened at the same time\n\nmy brain genuinely short-circuited for a second thinking about it 😭\n\ncolombia 🇨🇴 is playing jordan 🇯🇴 today at snapdragon stadium 🏟️ kickoff is at 4pm and i've already looked up the trolley route because that's the kind of person i apparently am now\n\ni also maybe built us a little app for the afternoon because i wanted today to actually feel like a thing and not just a thing we did`;
-  const closer=b==="bold"||b==="pretty bold"
+
+  const askBit=b==="bold"
+    ?"\n\ni want to take you to a soccer match today.\n\ncolombia 🇨🇴 vs jordan 🇯🇴. snapdragon stadium 🏟️. kickoff at 4pm. i already have the trolley route, the plan, the whole thing. i just need a yes."
+    :b==="pretty bold"
+    ?"\n\ni really want to hang out with you today\n\nalso separately: colombia 🇨🇴 is playing jordan 🇯🇴 at snapdragon stadium 🏟️ — kickoff at 4pm — and i've already looked up the trolley route because that's who i am now apparently"
+    :b==="medium"
+    ?"\n\ni really want to hang out with you today\n\nlike... a lot\n\nalso separately: i love soccer. like. genuinely a lot.\n\nand then it hit me — what if both of those things happened at the same time\n\nmy brain genuinely short-circuited for a second thinking about it 😭\n\ncolombia 🇨🇴 is playing jordan 🇯🇴 at snapdragon stadium 🏟️ kickoff is at 4pm"
+    :"\n\nso there's a soccer match today\n\ncolombia vs jordan. snapdragon. 4pm.\n\nand i've been sitting here going back and forth about whether to ask you\n\nand i'm still going back and forth honestly but here's the text so apparently i'm doing it";
+
+  const appBit=b==="bold"
+    ?"\n\ni also built us a little app for the afternoon. live scores, bets, a quote wall, a mascot named Coach Ball. it's a lot. i'm a lot. come to the game."
+    :b==="we'll see"
+    ?"\n\ni also maybe built a tiny app for today. in case you said yes. i was optimistic."
+    :"\n\ni also maybe built us a little app for the afternoon because i wanted today to actually feel like a thing and not just a thing we did";
+
+  const closer=b==="bold"
+    ?"\n\nso. are you in? ⚽\n\n(please be in. i'm already excited about this and that's mildly embarrassing.) 💛"
+    :b==="pretty bold"
     ?"\n\nso. do you wanna? with me? today? ⚽\n\n(you don't have to say yes. but also please say yes. okay bye 💛)"
-    :"\n\nso. do you wanna? with me? today? ⚽\n\n(no pressure. there's a little pressure. i'm bad at this. you know this. please say yes anyway 💛)";
-  return opener+workBit+coreBit+closer;
+    :b==="medium"
+    ?"\n\nso. do you wanna? with me? today? ⚽\n\n(no pressure. there's a little pressure. i'm bad at this. you know this. please say yes anyway 💛)"
+    :"\n\nso. maybe? possibly? with me? today? ⚽\n\n(i've been thinking about asking all morning. here we are. please don't make it weird. or do. that's also fine.) 💛";
+
+  return opener+workBit+askBit+appBit+closer;
 }
 
 function surpriseSMSLink(txt){
   return `sms:9166777839;body=${encodeURIComponent(txt)}`;
 }
+
+function markSmsOpened(){S.smsOpened=true;saveLocal();const b=document.getElementById("sheYesBtn");if(b){b.disabled=false;b.style.opacity="1";}const n=document.getElementById("sendFirst");if(n)n.style.display="none";}
 
 function renderSurpriseReveal(){
   const txt=buildSurpriseText();
@@ -762,18 +798,20 @@ function renderSurpriseReveal(){
     <h2 class="h2" style="text-align:center;margin:10px 0 14px">your move, Pathak</h2>
     <div class="msg-bubble">${txt.replace(/\n/g,"<br/>")}</div>
     <div class="spacer"></div>
-    <a class="btn alt" href="${smsUrl}" style="text-decoration:none">💌 open in messages →</a>
+    <a class="btn alt" href="${smsUrl}" style="text-decoration:none" onclick="markSmsOpened()">💌 open in messages →</a>
     <p class="muted center" style="font-size:.76rem;margin:8px 0 18px">opens a pre-written text to Rahman · edit before sending</p>
-    <button class="btn" onclick="renderSheYes()">she said YES 💛</button>
+    <button class="btn" id="sheYesBtn" onclick="renderSheYes()" ${S.smsOpened?'':'disabled'} style="${S.smsOpened?'':'opacity:.45'}">she said YES 💛</button>
+    ${S.smsOpened?'':'<p class="muted center" id="sendFirst" style="font-size:.76rem;margin-top:4px">send the text first 👆</p>'}
     <button class="btn ghost" style="margin-top:10px" onclick="renderSheNo()">still working on it... 😬</button>
   </div>`;
 }
 
 function renderSheYes(){
   S.sheSaidYes=true;saveLocal();
+  const appUrl=`https://sr2527.github.io/foulplay/?join=${S.binId||""}`;
   const codeBody=S.binId
-    ?`hey! so i might have built us a little app for today 😭⚽\n\nopen this on your phone: https://sr2527.github.io/lalo/foulplay/\n\nthen tap the Rahman jersey and enter this code to join:\n\n${S.binId}`
-    :"hey! open foulplay on your phone and enter this code to join:\n\n(loading your code — check back in a sec)";
+    ?`hey! so i might have built us a little app for today 😭⚽\n\njust tap this link and you're in:\n${appUrl}\n\n(backup code if the link doesn't work: ${S.binId})`
+    :"hey! open foulplay on your phone:\nhttps://sr2527.github.io/foulplay/\n\n(code loading — check back in a sec)";
   const codeSMS=`sms:9166777839;body=${encodeURIComponent(codeBody)}`;
   $app().innerHTML=`<div class="screen">
     <div style="font-size:2.8rem;text-align:center">🎉</div>
@@ -826,14 +864,59 @@ function renderHostSession(){
 
 /* ===================== RAHMAN JOIN ===================== */
 function renderRahmanJoin(){
+  const prefill=new URLSearchParams(location.search).get('join')||'';
   $app().innerHTML=`<div class="screen">
     <div class="eyebrow center">welcome, Rahman 🌟</div>
     <h1 class="h1 center" style="margin:8px 0 6px">enter the code</h1>
-    <p class="muted center" style="margin-bottom:18px;font-size:.9rem">Pathak has a code for you — paste it below to join the game.</p>
-    <input class="join-input" id="joinCode" placeholder="paste code" autocomplete="off" autocorrect="off" autocapitalize="off"/>
+    <p class="muted center" style="margin-bottom:18px;font-size:.9rem">Pathak sent you a link or a code — paste it below.</p>
+    <input class="join-input" id="joinCode" placeholder="paste code" autocomplete="off" autocorrect="off" autocapitalize="off" value="${prefill}"/>
     <div class="spacer"></div>
     <button class="btn" id="joinBtn" onclick="doJoin()">let's go →</button>
   </div>`;
+}
+
+/* ===================== RAHMAN WELCOME ===================== */
+function renderRahmanWelcome(){
+  const eMap={"locked in":"locked in 🔋","solid":"solid vibes 😊","fumes":"running on fumes 😴","depends":"coffee-dependent ☕"};
+  const wMap={"none":"nothing hanging over him","barely":"basically work-free","little":"a little on his mind","stressed":"stressed but here anyway"};
+  const bMap={"bold":"extremely bold today 🚀","pretty bold":"feeling pretty bold","medium":"medium bold ☕","we'll see":"taking it as it comes"};
+  const energy=eMap[S.pathakQs.energy]||"ready for today";
+  const work=wMap[S.pathakQs.work]||"free";
+  const bold=bMap[S.pathakQs.move]||"hopeful";
+  $app().innerHTML=`<div class="screen">
+    <div class="eyebrow center">you're in 💛</div>
+    <h1 class="h1 center" style="margin:10px 0 4px">hi, Rahman.</h1>
+    <p class="muted center" style="font-size:.88rem;margin-bottom:20px">he answered a few questions before sending this your way</p>
+    <div class="card" style="margin-bottom:14px">
+      <div class="muted" style="font-size:.68rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">pathak's vibe check</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="muted" style="font-size:.85rem">energy today</span>
+          <span style="font-weight:700;font-size:.9rem">${energy}</span>
+        </div>
+        <div class="divider" style="margin:2px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="muted" style="font-size:.85rem">work situation</span>
+          <span style="font-weight:700;font-size:.9rem">${work}</span>
+        </div>
+        <div class="divider" style="margin:2px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="muted" style="font-size:.85rem">boldness level</span>
+          <span style="font-weight:700;font-size:.9rem">${bold}</span>
+        </div>
+      </div>
+    </div>
+    <div class="card center" style="margin-bottom:20px;background:#FFF3CC">
+      <p style="font-family:'Fraunces',serif;font-style:italic;font-size:.98rem;line-height:1.5">"Football is life. And today, so is your afternoon."</p>
+      <p class="muted" style="font-size:.72rem;margin-top:6px">— Coach Ball ⚽</p>
+    </div>
+    <button class="btn alt" onclick="finishRahmanWelcome()">let's go ⚽</button>
+  </div>`;
+}
+function finishRahmanWelcome(){
+  S.rahmanWelcomed=true;saveLocal();
+  render();go("match");
+  setTimeout(()=>flashMascot("You're in, Rahman! Football is life, baby. Let's get it. 🏟️"),300);
 }
 
 /* ===================== SESSION SCREEN ===================== */
@@ -891,8 +974,7 @@ async function doJoin(){
     S.binId=code;S.role="guest";S.onboarded=true;
     saveLocal();startPolling();
     findFixture().then(()=>pollNow());
-    render();go(S.tab||"match");
-    flashMascot("You're in, Rahman! Football is life, baby. Let's get it. 🏟️");
+    render(); // will hit rahmanWelcome screen
   }catch(e){alert("Network error.");document.getElementById("joinBtn").disabled=false;document.getElementById("joinBtn").textContent="join →";}
 }
 
@@ -1054,16 +1136,15 @@ function paintScoreboard(){
         </div>
         <div class="divider" style="border-color:rgba(255,255,255,.2)"></div>
         <p style="font-size:.82rem;opacity:.9">Settle a prop bet. Refill the cup. Take the halftime pose photo. You've got 15 minutes.</p>
+        <button onclick="go('play')" style="margin-top:12px;background:rgba(255,255,255,.15);color:#fff;font-weight:700;padding:10px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,.3);font-size:.88rem;cursor:pointer;width:100%">→ check the bets</button>
       </div>`;
     }else{hc.innerHTML="";}
   }
   const lc=document.getElementById("liveControls");if(!lc)return;
   lc.innerHTML=`<div class="row" style="flex-wrap:wrap;gap:8px">
     <button class="chip" onclick="pollNow()">↻ refresh</button>
-    <button class="chip" onclick="demoGoal()">demo goal 🎉</button>
-    <button class="chip" onclick="manualScore()">edit score</button>
   </div>
-  <p class="muted" style="font-size:.76rem;margin-top:8px">Live feed active 📡 · auto-syncs every 90s</p>`;
+  <p class="muted" style="font-size:.76rem;margin-top:8px">Live data 📡 · game updates every 90s · your logs sync in ~5s</p>`;
   renderFeed();
 }
 function renderFeed(){
@@ -1086,13 +1167,13 @@ function tabHis(){return `<section id="tab-his" class="tab pad">
     <div style="font-weight:700;margin-bottom:10px">🔮 pre-match call</div>
     <label class="muted" style="font-size:.8rem">Predicted scoreline</label>
     <input class="txt" style="margin:5px 0 12px" value="${esc(S.prediction.score||'')}"
-      placeholder="e.g. Colombia 2–1 Jordan" onchange="S.prediction.score=this.value;syncSave()"/>
+      placeholder="e.g. Colombia 2–1 Jordan" oninput="S.prediction.score=this.value;syncSave()"/>
     <label class="muted" style="font-size:.8rem">First goalscorer</label>
     <input class="txt" style="margin:5px 0 12px" value="${esc(S.prediction.scorer||'')}"
-      placeholder="who finds the net first?" onchange="S.prediction.scorer=this.value;syncSave()"/>
+      placeholder="who finds the net first?" oninput="S.prediction.scorer=this.value;syncSave()"/>
     <label class="muted" style="font-size:.8rem">Colombia's formation</label>
     <input class="txt" style="margin:5px 0 0" value="${esc(S.prediction.shape||'')}"
-      placeholder="4-2-3-1? back three?" onchange="S.prediction.shape=this.value;syncSave()"/>
+      placeholder="4-2-3-1? back three?" oninput="S.prediction.shape=this.value;syncSave()"/>
   </div>
 
   <div class="spacer"></div>
@@ -1121,18 +1202,19 @@ function tabHis(){return `<section id="tab-his" class="tab pad">
   </div>
 
   <div class="spacer"></div>
-  <div class="card" style="border-color:var(--blue2)">
-    <div style="font-weight:700;margin-bottom:4px">🔒 your secret wager</div>
-    <p class="muted" style="font-size:.8rem;margin-bottom:10px">Only you can see this until the recap reveal. A dare, a favor, a dinner — whatever you want to put up. Locked until the final whistle.</p>
-    ${S.wagerRevealed
-      ? `<div class="logline">${esc(S.wagerHim||"(nothing wagered)")}</div>`
-      : `<textarea class="note" id="wagerHimIn" placeholder="e.g. 'if i win, you have to watch a full match with me every weekend'" style="min-height:80px">${esc(S.wagerHim||"")}</textarea>
-         <div class="spacer"></div>
-         <button class="btn ghost" onclick="saveWager('him')">seal my wager 🔒</button>
-         ${S.wagerHim ? `<p class="muted" style="font-size:.76rem;margin-top:6px">✅ sealed — editable until the recap</p>` : ""}`
-    }
-    ${S.wagerHer && !S.wagerRevealed ? `<div class="divider"></div><p class="muted" style="font-size:.8rem">Rahman's wager: <b>🔒 sealed</b> — revealed at the end</p>` : ""}
+  <div class="card" id="wagerHimCard" style="border-color:var(--blue2)">
+    ${wagerCardContent('him')}
   </div>
+
+  <div class="spacer"></div>
+  ${S.quizResult
+    ? `<div class="card center" style="background:#F3F7FD">
+        <div class="muted" style="font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">today you're riding with</div>
+        <div style="font-size:2rem">${TEAMS[S.quizResult].flag}</div>
+        <div style="font-weight:700;font-size:1rem;margin-top:4px">${TEAMS[S.quizResult].name}</div>
+        <button class="btn ghost" style="margin-top:10px;font-size:.8rem" onclick="openQuiz()">retake quiz</button>
+       </div>`
+    : `<button class="btn ghost" onclick="openQuiz()">⚽ who should we root for? (take the quiz)</button>`}
 </section>`;}
 
 function renderComm(){
@@ -1186,21 +1268,19 @@ function tabHers(){return `<section id="tab-hers" class="tab pad">
   </div>
 
   <div class="spacer"></div>
-  <div class="card" style="border-color:var(--terra)">
-    <div style="font-weight:700;margin-bottom:4px">🔒 your secret wager</div>
-    <p class="muted" style="font-size:.8rem;margin-bottom:10px">Only you can see this until the recap reveal. A dare, a favor, a dinner — whatever you want to put up. Locked until the final whistle.</p>
-    ${S.wagerRevealed
-      ? `<div class="logline">${esc(S.wagerHer||"(nothing wagered)")}</div>`
-      : `<textarea class="note" id="wagerHerIn" placeholder="e.g. 'if i win, you have to learn the colombia chant'" style="min-height:80px">${esc(S.wagerHer||"")}</textarea>
-         <div class="spacer"></div>
-         <button class="btn ghost" onclick="saveWager('her')">seal my wager 🔒</button>
-         ${S.wagerHer ? `<p class="muted" style="font-size:.76rem;margin-top:6px">✅ sealed — editable until the recap</p>` : ""}`
-    }
-    ${S.wagerHim && !S.wagerRevealed ? `<div class="divider"></div><p class="muted" style="font-size:.8rem">Pathak's wager: <b>🔒 sealed</b> — revealed at the end</p>` : ""}
+  <div class="card" id="wagerHerCard" style="border-color:var(--terra)">
+    ${wagerCardContent('her')}
   </div>
 
   <div class="spacer"></div>
-  <button class="btn ghost" onclick="openQuiz()">⚽ who should we root for? (take the quiz)</button>
+  ${S.quizResult
+    ? `<div class="card center" style="background:#F3F7FD">
+        <div class="muted" style="font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">today you're riding with</div>
+        <div style="font-size:2rem">${TEAMS[S.quizResult].flag}</div>
+        <div style="font-weight:700;font-size:1rem;margin-top:4px">${TEAMS[S.quizResult].name}</div>
+        <button class="btn ghost" style="margin-top:10px;font-size:.8rem" onclick="openQuiz()">retake quiz</button>
+       </div>`
+    : `<button class="btn ghost" onclick="openQuiz()">⚽ who should we root for? (take the quiz)</button>`}
 </section>`;}
 
 function addHisQuote(){
@@ -1273,13 +1353,18 @@ function tallyBets(){
   if(eh)eh.textContent=h;if(em)em.textContent=m;
 }
 
+const FRONT_CAM_PHOTOS=new Set(["trolley","secret","proud"]);
+
 function photoCell(p){
-  const img=S.photos[p.id];
-  return `<div class="photo-cell ${img?'done':''}" onclick="document.getElementById('ph-${p.id}').click()">
-    <div class="cap">${img?'✅ ':'📷 '}${p.cap}</div>
+  const thumb=S.photos[p.id];
+  const hq=thumb?localStorage.getItem("hq_"+p.id):null;
+  const displayImg=hq||thumb;
+  const cap=FRONT_CAM_PHOTOS.has(p.id)?"user":"environment";
+  return `<div class="photo-cell ${displayImg?'done':''}" onclick="document.getElementById('ph-${p.id}').click()">
+    <div class="cap">${displayImg?'✅ ':'📷 '}${p.cap}</div>
     <div class="hint">${p.hint}</div>
-    ${img?`<img src="${img}" loading="lazy"/>`:''}
-    <input type="file" id="ph-${p.id}" accept="image/*" capture="environment" style="display:none"
+    ${displayImg?`<img src="${displayImg}" loading="lazy"/>`:''}
+    <input type="file" id="ph-${p.id}" accept="image/*" capture="${cap}" style="display:none"
       onchange="snap('${p.id}',this)"/>
   </div>`;}
 
@@ -1305,14 +1390,41 @@ function addQuote(){
 }
 
 /* ===================== WAGER ===================== */
+function wagerCardContent(who){
+  const isHer=who==="her";
+  const wager=isHer?S.wagerHer:S.wagerHim;
+  const otherWager=isHer?S.wagerHim:S.wagerHer;
+  const inputId=isHer?"wagerHerIn":"wagerHimIn";
+  const ph=isHer?"e.g. 'if i win, you have to learn the colombia chant'":"e.g. 'if i win, you have to watch a full match with me every weekend'";
+  const otherName=isHer?"Pathak":"Rahman";
+  return `<div style="font-weight:700;margin-bottom:4px">🔒 your secret wager</div>
+    <p class="muted" style="font-size:.8rem;margin-bottom:10px">Only you can see this until the recap reveal. A dare, a favor, a dinner — whatever you want to put up. Locked until the final whistle.</p>
+    ${S.wagerRevealed
+      ?`<div class="logline">${esc(wager||"(nothing wagered)")}</div>`
+      :`<textarea class="note" id="${inputId}" placeholder="${ph}" style="min-height:80px">${esc(wager||"")}</textarea>
+        <div class="spacer"></div>
+        <button class="btn ghost" onclick="saveWager('${who}')">seal my wager 🔒</button>
+        ${wager?`<p class="muted" style="font-size:.76rem;margin-top:6px">✅ sealed — editable until the recap</p>`:""}`
+    }
+    ${otherWager&&!S.wagerRevealed?`<div class="divider"></div><p class="muted" style="font-size:.8rem">${otherName}'s wager: <b>🔒 sealed</b> — revealed at the end</p>`:""}`;
+}
+
 function saveWager(who){
-  const el=document.getElementById("wager"+who.charAt(0).toUpperCase()+who.slice(1)+"In");
+  const inputId=who==="her"?"wagerHerIn":"wagerHimIn";
+  const el=document.getElementById(inputId);
   if(!el)return;
   const v=el.value.trim();
   if(who==="her")S.wagerHer=v; else S.wagerHim=v;
   syncSave();
   flashMascot("Sealed. Cannot wait to see how this plays out. 🔒");
-  render();go(who==="her"?"hers":"his");
+  // in-place update — no full re-render needed
+  const cardId=who==="her"?"wagerHerCard":"wagerHimCard";
+  const card=document.getElementById(cardId);
+  if(card)card.innerHTML=wagerCardContent(who);
+  // also update the other wager card's sealed status indicator
+  const otherId=who==="her"?"wagerHimCard":"wagerHerCard";
+  const other=document.getElementById(otherId);
+  if(other)other.innerHTML=wagerCardContent(who==="her"?"him":"her");
 }
 
 /* ===================== RECAP + REPORT CARDS ===================== */
@@ -1408,7 +1520,7 @@ function openRecap(){
 
     ${photosDone>0?`<div class="card" style="margin-bottom:14px">
       <div style="font-weight:700;margin-bottom:10px">📸 ${photosDone} photo${photosDone>1?"s":""} from today</div>
-      <div class="recap-grid">${PHOTOS.filter(p=>S.photos[p.id]).map(p=>`<div><img src="${S.photos[p.id]}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px"/><div style="font-size:.7rem;color:var(--soft);margin-top:3px;text-align:center">${p.cap}</div></div>`).join("")}</div>
+      <div class="recap-grid">${PHOTOS.filter(p=>S.photos[p.id]).map(p=>{const src=localStorage.getItem("hq_"+p.id)||S.photos[p.id];return`<div><img src="${src}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px"/><div style="font-size:.7rem;color:var(--soft);margin-top:3px;text-align:center">${p.cap}</div></div>`;}).join("")}</div>
     </div>`:""}
 
     ${S.quotes.length>0?`<div class="card" style="margin-bottom:14px">
@@ -1515,6 +1627,7 @@ function renderQuiz(){
     </div>`;
   }else{
     const w=quizScore.col>=quizScore.jor?"col":"jor";const t=TEAMS[w];
+    S.quizResult=w;syncSave();
     document.getElementById("nav").style.display="flex";
     $app().innerHTML=`<div class="screen center">
       <div style="font-size:3.6rem">${t.flag}</div>
@@ -1523,7 +1636,7 @@ function renderQuiz(){
       <p class="muted" style="max-width:280px;margin:0 auto">${w==='col'?'Flair, drums, and a sea of yellow. Go loud.':'The brave underdogs. Grit over glamour.'}</p>
       <div class="flagband" style="max-width:180px;margin:16px auto">${t.colors.map(c=>`<i style="background:${c}"></i>`).join("")}</div>
       <div class="spacer"></div>
-      <button class="btn alt" onclick="render();go('hers')">I can work with that →</button>
+      <button class="btn alt" onclick="render();go(S.tab||'match')">I can work with that →</button>
     </div>`;
     flashMascot("Now you got a side. Football is LIFE! 🎉");
   }
@@ -1645,22 +1758,33 @@ function statusLabel(st,el){
 setInterval(()=>{if(document.visibilityState==="visible")pollNow();},90000);
 
 /* ===================== PHOTOS ===================== */
+function resizeImg(img,maxPx,quality){
+  const scale=Math.min(1,maxPx/Math.max(img.width,img.height));
+  const c=document.createElement("canvas");
+  c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+  return c.toDataURL("image/jpeg",quality);
+}
+
 function snap(id,input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=e=>{
     const img=new Image();
     img.onload=()=>{
-      const max=160,scale=Math.min(1,max/Math.max(img.width,img.height));
-      const c=document.createElement("canvas");
-      c.width=img.width*scale;c.height=img.height*scale;
-      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
       try{
-        S.photos[id]=c.toDataURL("image/jpeg",.14);saveLocal();
+        // HQ version lives in localStorage only (not synced)
+        localStorage.setItem("hq_"+id, resizeImg(img,600,0.6));
+        // Small version goes into S.photos for sync
+        S.photos[id]=resizeImg(img,180,0.18);
+        saveLocal();
         render();go("play");
         flashMascot("Now THAT is a keeper shot. 📸");
         updatePhotoCount();
-      }catch(er){alert("Storage full — try deleting a photo first.");}
+      }catch(er){
+        // If localStorage is full, save only the small version
+        try{S.photos[id]=resizeImg(img,180,0.18);saveLocal();render();go("play");}catch(e2){alert("Storage full — try deleting a photo first.");}
+      }
     };
     img.src=e.target.result;
   };
@@ -1686,7 +1810,7 @@ function bump(group,i,d){
 function syncSave(){saveLocal();pushSync();}
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
 function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-function nowClock(){const d=new Date();let h=d.getHours(),m=d.getMinutes();const ap=h>=12?"PM":"AM";h=h%12||12;return h+":"+(m<10?"0":"")+m+" "+ap;}
+function nowClock(){const d=new Date();let h=d.getHours(),m=d.getMinutes();const ap=h>=12?"PM":"AM";h=h%12||12;const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];return mo+" "+d.getDate()+" · "+h+":"+(m<10?"0":"")+m+" "+ap;}
 function hideNav(){document.getElementById("nav").style.display="none";}
 function showNav(){document.getElementById("nav").style.display="flex";}
 
@@ -1720,10 +1844,8 @@ function snapKissCam(input){
   reader.onload=e=>{
     const img=new Image();
     img.onload=()=>{
-      const max=200,scale=Math.min(1,max/Math.max(img.width,img.height));
-      const c=document.createElement("canvas");c.width=img.width*scale;c.height=img.height*scale;
-      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-      S.photos["kisscam"]=c.toDataURL("image/jpeg",.18);saveLocal();
+      try{localStorage.setItem("hq_kisscam",resizeImg(img,600,0.6));}catch(e){}
+      S.photos["kisscam"]=resizeImg(img,180,0.18);saveLocal();
       closeKissCam();flashMascot("LEGENDARY. That one's going on the wall. 💋📸");
       syncSave();
     };
@@ -1738,18 +1860,35 @@ setInterval(()=>{
   }
 },90000);
 function resetSession(){
-  if(!confirm("This clears everything — all bets, notes, and logs. Are you sure?"))return;
+  const v=prompt('Type RESET to confirm (this clears all bets, notes, photos, and logs):');
+  if(v!=="RESET")return;
   localStorage.clear();location.reload();
 }
 
 /* ===================== BOOT ===================== */
 loadLocal();
-render();
-if(S.onboarded){
-  go(S.tab||"match");
-  setTimeout(tallyBets,100);
-  findFixture().then(()=>pollNow());
-  if(S.binId)startPolling();
+
+const _urlJoin=new URLSearchParams(location.search).get('join');
+if(_urlJoin&&!S.binId){
+  // Rahman tapped Pathak's link — auto-join
+  S.jerseyRole='rahman';S.role='guest';saveLocal();
+  $app().innerHTML=`<div class="screen center">
+    <div style="font-size:2rem;animation:bob 1s ease-in-out infinite">⚽</div>
+    <h2 class="h2" style="margin:16px 0 8px">loading...</h2>
+    <p class="muted">joining today's game</p>
+  </div>`;
+  joinBin(_urlJoin).then(ok=>{
+    if(ok){S.binId=_urlJoin;S.onboarded=true;saveLocal();startPolling();findFixture().then(()=>pollNow());}
+    render();
+  }).catch(()=>render());
+}else{
+  render();
+  if(S.onboarded){
+    go(S.tab||"match");
+    setTimeout(tallyBets,100);
+    findFixture().then(()=>pollNow());
+    if(S.binId)startPolling();
+  }
 }
 </script>
 </body>

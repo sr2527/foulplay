@@ -907,8 +907,8 @@ function renderSheYes(){
   S.sheSaidYes=true;saveLocal();
   const appUrl=`https://sr2527.github.io/foulplay/?join=${S.binId||""}`;
   const codeBody=S.binId
-    ?`hey! so i might have built us a little app for today 😭⚽\n\njust tap this link and you're in:\n${appUrl}\n\n(backup code if the link doesn't work: ${S.binId})`
-    :"hey! open foulplay on your phone:\nhttps://sr2527.github.io/foulplay/\n\n(code loading — check back in a sec)";
+    ?`okay so. don't make a big deal of this. but i may have spent an embarrassing number of hours building you a completely custom soccer experience for today\n\nlike. live scoreboard. prop bets. a mascot named Coach Ball. a whole tactical corner where you can log your takes. photo missions. a quote wall. a VIBE QUIZ. it's a lot. i did that.\n\nbecause i know how much you love this stuff and i wanted today to feel like a whole thing and not just a thing we did\n\ntap this and you're in:\n${appUrl}\n\n(backup code: ${S.binId})\n\nyou're welcome. i accept thank yous in the form of colombian food truck items 🌮`
+    :`okay so. don't make a big deal of this. but i may have spent an embarrassing number of hours building you a completely custom soccer experience for today\n\nlike. live scoreboard. prop bets. a mascot named Coach Ball. a whole tactical corner where you can log your takes. photo missions. a quote wall. a VIBE QUIZ. it's a lot. i did that.\n\nopen this on your phone:\nhttps://sr2527.github.io/foulplay/\n\nyou're welcome. i accept thank yous in the form of colombian food truck items 🌮`;
   const codeSMS=`sms:9166777839;body=${encodeURIComponent(codeBody)}`;
   $app().innerHTML=`<div class="screen">
     <div style="font-size:2.8rem;text-align:center">🎉</div>

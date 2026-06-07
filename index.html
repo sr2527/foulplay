@@ -1499,7 +1499,9 @@ function betCard(b,i){return `<div class="bet">
 </div>`;}
 
 function setBet(who,i,o){
-  if(who==="her")S.betHer[i]=o; else if(who==="him")S.betHim[i]=o; else S.betResult[i]=o;
+  const cur=who==="her"?S.betHer[i]:who==="him"?S.betHim[i]:S.betResult[i];
+  const val=cur===o?undefined:o;
+  if(who==="her")S.betHer[i]=val; else if(who==="him")S.betHim[i]=val; else S.betResult[i]=val;
   syncSave();tallyBets();
   // re-render the bet card in place
   const old=document.querySelectorAll(".bet")[i];

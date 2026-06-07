@@ -256,6 +256,25 @@ input.txt:focus{border-color:var(--blue);outline:none}
   flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:30px}
 #kissCam.show{display:flex;animation:fade .3s ease}
 .kc-heart{font-size:4rem;animation:bob .8s ease-in-out infinite}
+
+/* ---- mascot extra animations ---- */
+@keyframes sway{0%,100%{transform:rotate(0)}30%{transform:rotate(-11deg)}70%{transform:rotate(11deg)}}
+@keyframes jumpup{0%,100%{transform:translateY(0)}35%{transform:translateY(-22px)}65%{transform:translateY(-9px)}}
+@keyframes shimmy{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-5px) rotate(-5deg)}40%{transform:translateX(5px) rotate(5deg)}60%{transform:translateX(-4px) rotate(-4deg)}80%{transform:translateX(4px) rotate(4deg)}}
+@keyframes shiver{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-3px)}40%,80%{transform:translateX(3px)}}
+@keyframes armwv{0%{transform:rotate(32deg) translateY(6px)}33%{transform:rotate(-55deg) translateY(-16px)}66%{transform:rotate(80deg) translateY(12px)}100%{transform:rotate(32deg) translateY(6px)}}
+@keyframes legkick{0%,100%{transform:rotate(0);transform-origin:top center}50%{transform:rotate(45deg);transform-origin:top center}}
+@keyframes lookleft{0%,100%{transform:translateX(0)}50%{transform:translateX(-5px)}}
+@keyframes lookright{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+
+#mascot-outer.swaying{animation:sway .6s ease-in-out 2!important}
+#mascot-outer.jumping{animation:jumpup .45s ease-in-out 2!important}
+#mascot-outer.shimmying{animation:shimmy .38s ease-in-out 3!important}
+#mascot-outer.shivering{animation:shiver .22s ease-in-out 4!important}
+.arm-wave{animation:armwv .38s ease-in-out 3!important;transform-origin:right center!important}
+.leg-kick{animation:legkick .32s ease-in-out 2!important;transform-origin:top center!important}
+#mface.looking-l{animation:lookleft .7s ease-in-out 1}
+#mface.looking-r{animation:lookright .7s ease-in-out 1}
 </style>
 </head>
 <body>
@@ -551,7 +570,7 @@ async function pollSync(){
         const newest=S.events[S.events.length-1];
         if(newest&&newest.icon==="⚽"){
           const colScored=newest.title.toLowerCase().includes("colombia");
-          confetti();flashMascot(rand(colScored?REACT.colGoal:REACT.jorGoal));
+          if(colScored)confetti();flashMascot(rand(colScored?REACT.colGoal:REACT.jorGoal),colScored?"goal":null);
         }
       }
       if(JSON.stringify(S.score)!==prevScore&&document.getElementById("tab-match")){
@@ -729,7 +748,7 @@ function renderPathakOnboard(){
       <div class="eyebrow">PATHAK · question ${pqStep+1} of ${PATHAK_QS.length}</div>
       <h1 class="h1" style="margin:8px 0 22px;font-size:1.5rem">${q.q}</h1>
       ${q.opts.map(([label,val])=>`<button class="opt" onclick="pqPick('${q.key}','${val}')">${label}</button>`).join("")}
-      ${pqStep>0?`<button class="btn ghost" style="margin-top:10px" onclick="pqBack()">← back</button>`:''}
+      <button class="btn ghost" style="margin-top:10px" onclick="${pqStep>0?'pqBack()':'S.jerseyRole=null;S.role=null;saveLocal();render()'}">← back</button>
     </div>`;
   }else{
     // questions done, session creating in background
@@ -1083,7 +1102,7 @@ function tapMilestone(id){
   S.milestones[id]=nowClock();
   syncSave();
   const m=MILESTONES.find(x=>x.id===id);
-  if(m)flashMascot(m.react);
+  if(m){flashMascot(m.react,"celebrate");setTimeout(kickLeg,150);}
   const row=document.getElementById("msRow");
   if(row)row.outerHTML=milestoneRow();
   // kiss cam: random chance after they're inside (10% chance on any milestone)
@@ -1646,7 +1665,47 @@ function quizPick(team){quizScore[team]++;quizStep++;renderQuiz();}
 
 /* ===================== MASCOT ===================== */
 let bubbleTimer=null;
-function tapMascot(){setMood("happy");flashMascot(rand(QUOTES));}
+
+function animateMascot(cls,dur){
+  const el=document.getElementById("mascot-outer");if(!el)return;
+  ["swaying","jumping","shimmying","shivering"].forEach(c=>el.classList.remove(c));
+  el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls),dur||900);
+}
+function waveArm(){
+  const arm=document.querySelector(".m-arm-l");if(!arm)return;
+  arm.classList.add("arm-wave");
+  setTimeout(()=>arm.classList.remove("arm-wave"),1200);
+}
+function kickLeg(){
+  const shin=document.querySelector(".m-leg:last-child .m-shin");if(!shin)return;
+  shin.classList.add("leg-kick");
+  setTimeout(()=>shin.classList.remove("leg-kick"),700);
+}
+function lookAround(){
+  const face=document.getElementById("mface");if(!face)return;
+  const cls=Math.random()<.5?"looking-l":"looking-r";
+  face.classList.add(cls);
+  setTimeout(()=>face.classList.remove(cls),800);
+}
+function scheduleIdleAnim(){
+  setTimeout(()=>{
+    if(document.visibilityState==="visible"&&document.getElementById("mascot-outer")){
+      const r=Math.random();
+      if(r<.35)animateMascot("swaying",1200);
+      else if(r<.65)waveArm();
+      else lookAround();
+    }
+    scheduleIdleAnim();
+  },7000+Math.random()*9000);
+}
+
+function tapMascot(){
+  setMood("happy");
+  flashMascot(rand(QUOTES));
+  animateMascot("swaying",1200);
+  setTimeout(waveArm,200);
+}
 function setMood(mood){
   const mouth=document.getElementById("mmouth");
   const bl=document.getElementById("browL"),br=document.getElementById("browR");
@@ -1675,6 +1734,11 @@ function flashMascot(text,mood){
   t.textContent=text;b.classList.add("show");
   clearTimeout(bubbleTimer);
   bubbleTimer=setTimeout(()=>{b.classList.remove("show");setMood("normal");},5500);
+  // trigger body animation based on mood
+  if(mood==="goal"){animateMascot("jumping",900);setTimeout(kickLeg,250);}
+  else if(mood==="sad"){animateMascot("shivering",900);}
+  else if(mood==="celebrate"){animateMascot("shimmying",1200);setTimeout(waveArm,100);}
+  else if(Math.random()<.45){waveArm();}
 }
 
 /* ===================== CONFETTI ===================== */
@@ -1729,9 +1793,9 @@ async function pollNow(){
     const st=f.fixture.status.short;
     S.statusText=statusLabel(st,f.fixture.status.elapsed);
     if(st!==S.lastStatus){
-      if(st==="1H"&&S.lastStatus==="NS")flashMascot(rand(REACT.kickoff));
-      if(st==="HT")flashMascot(rand(REACT.half));
-      if(st==="FT"||st==="AET"||st==="PEN")flashMascot(rand(REACT.full));
+      if(st==="1H"&&S.lastStatus==="NS")flashMascot(rand(REACT.kickoff),"celebrate");
+      if(st==="HT")flashMascot(rand(REACT.half),"celebrate");
+      if(st==="FT"||st==="AET"||st==="PEN")flashMascot(rand(REACT.full),"celebrate");
       S.lastStatus=st;
     }
     const evs=f.events||[];
@@ -1745,7 +1809,7 @@ async function pollNow(){
     S.events.forEach(e=>{
       if(!S.seenEvents.includes(e.key)){
         S.seenEvents.push(e.key);
-        if(e.icon==="⚽"){const col=e.title.toLowerCase().includes("colombia");confetti();flashMascot(rand(col?REACT.colGoal:REACT.jorGoal),"goal");}
+        if(e.icon==="⚽"){const col=e.title.toLowerCase().includes("colombia");if(col)confetti();flashMascot(rand(col?REACT.colGoal:REACT.jorGoal),col?"goal":null);}
         else if(e.icon==="🟨"||e.icon==="🟥")flashMascot(rand(REACT.card));
       }
     });
@@ -1867,6 +1931,7 @@ function resetSession(){
 }
 
 /* ===================== BOOT ===================== */
+scheduleIdleAnim();
 loadLocal();
 
 const _urlJoin=new URLSearchParams(location.search).get('join');

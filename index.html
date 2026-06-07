@@ -257,6 +257,12 @@ input.txt:focus{border-color:var(--blue);outline:none}
 #kissCam.show{display:flex;animation:fade .3s ease}
 .kc-heart{font-size:4rem;animation:bob .8s ease-in-out infinite}
 
+/* say this card */
+#sayThisCard{position:fixed;bottom:96px;left:0;right:0;max-width:520px;margin:0 auto;
+  z-index:85;padding:0 14px;display:none}
+#sayThisCard.show{display:block;animation:slideup .35s ease}
+@keyframes slideup{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
 /* ---- mascot extra animations ---- */
 @keyframes sway{0%,100%{transform:rotate(0)}30%{transform:rotate(-11deg)}70%{transform:rotate(11deg)}}
 @keyframes jumpup{0%,100%{transform:translateY(0)}35%{transform:translateY(-22px)}65%{transform:translateY(-9px)}}
@@ -308,6 +314,13 @@ input.txt:focus{border-color:var(--blue);outline:none}
     <textarea class="note" id="qqText" placeholder="the quote..." rows="3" style="margin-bottom:12px"></textarea>
     <button class="btn" onclick="submitQuickQuote()">add to the wall</button>
     <button class="btn ghost" style="margin-top:8px" onclick="closeQuickQuote()">cancel</button>
+  </div>
+</div>
+<div id="sayThisCard">
+  <div style="background:#fff;border:1.5px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 -4px 24px rgba(0,0,0,.13)">
+    <div style="font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--terra);font-weight:700;margin-bottom:8px">📢 Coach Ball says</div>
+    <div id="sayThisText" style="font-family:'Fraunces',serif;font-size:.98rem;line-height:1.6;font-style:italic"></div>
+    <button onclick="closeSayThis()" style="margin-top:14px;font-size:.85rem;font-weight:700;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:11px 20px;cursor:pointer;width:100%">got it 😏</button>
   </div>
 </div>
 <div id="kissCam">
@@ -363,6 +376,44 @@ const REACT = {
   card:["Ref's gotta ref. Don't let it live rent-free in your head.","Be a goldfish about it. 🐠","Whistle's just a fella with a job."],
   var:["They're checkin' the tape. Patience — it's a virtue AND a Tom Petty song.","VAR: technology ruining beautiful moments since forever. Be a goldfish."]
 };
+const SAY_THIS={
+  ourGoal:[
+    "lean over and go: 'textbook third-man run — the half-space was completely exposed, you literally can't coach that'",
+    "casually: 'their high line was always going to get picked apart by a forward with that movement profile'",
+    "with full confidence: 'the underlapping run created the overload, the finish was just the easy part honestly'",
+    "shrug and say: 'they had zero press triggers in the final third, completely disorganized defensively'",
+    "turn to him: 'that's what happens when you let a winger cut inside on his stronger foot — textbook'",
+    "mid-cheer: 'the xG on that was probably like 0.6 but he made it look like a tap-in'",
+  ],
+  theirGoal:[
+    "whisper: 'that linesman has had it out for this team since the group stage. i'm just saying.'",
+    "turn to him: 'VAR is genuinely broken — that was clearly offside by a centimeter, maybe'",
+    "calm but serious: 'the defensive shape completely collapsed after the first press. it's a systemic issue'",
+    "slowly shake your head, then: 'be a goldfish. ten seconds. we move.'",
+    "lean in: 'they scored but honestly their possession stats are embarrassing. this means nothing.'",
+    "nodding like you saw it coming: 'yeah their striker's movement off the ball was always going to punish a high line'",
+  ],
+  card:[
+    "indignant: 'that ref is on SOMETHING — that was shoulder to shoulder, completely legal contact'",
+    "conspiratorially: 'he's been looking for a reason to book him since minute one. vendetta. personal.'",
+    "with authority: 'that tackle had a 94% ball-win percentage statistically. not a foul, full stop.'",
+    "lean over: 'i've never trusted a ref in that kit and this is exactly why'",
+  ],
+  kickoff:[
+    "turn to him and say: 'may the best pressing structure win'",
+    "very seriously: 'i need you to know i've been mentally preparing for this for three days'",
+    "lean over: 'okay be honest — do you think they'll play a high line or sit back and counter?'",
+    "grab his arm: '4 PM. this is real. we're actually here right now.'",
+    "casually: 'i respect anyone who can execute a 4-3-3 at this altitude of competition'",
+  ],
+  half:[
+    "turn to him: 'okay real talk — rate this half out of ten. i'll go first: a controversial 6.5'",
+    "lean over: 'if you could sub on anyone in the world right now who would it be. no wrong answers.'",
+    "casually: 'i just think the double pivot is being asked to do too much in this 4-3-3 transition'",
+    "mid-stretch: 'honestly this might be my favorite 45 minutes of the whole year and i'm including non-football ones'",
+    "thoughtful: 'the manager needs to adjust the width — they're getting pressed too narrow in the build-up'",
+  ],
+};
 const TEAMS={
   col:{name:"Colombia",flag:"🇨🇴",nick:"Los Cafeteros",colors:["#FCD116","#003893","#CE1126"],
     desc:"South American flair, high press, electric going forward. Huge, loud SoCal fanbase — expect drums and a sea of yellow."},
@@ -388,7 +439,7 @@ const SAYINGS=[
 const HER_LOG=["Wrong-team cheer 📣","'He's literally so cute' 😭","Fake expertise moment 🎓","Random clap for nothing 👏","Stole the food 🍟","'Wait who's winning?' 🤔","Crowd-follow stand up 🙋","Commenting on the ref's shorts 👀","'Is the goalie allowed to do that?'"];
 const HIS_LOG=["Head in hands 😩","Yelled at the ref 😤","Drew a formation in the air ✋","Unprompted rule lecture 📖","Psychic foul prediction 🔮","Mentioned the academy / playing days ⚽","The proud 'she gets it' look 🥹","Dramatic sigh after a miss 😮‍💨","Stood up to coach from the stands 🧑‍💼"];
 const HER_PRED=["He yells at the ref 3+ times","He gives me an unprompted rule lecture","He predicts a foul before the whistle","He brings up his playing days","He puts his head in his hands","He draws a formation in the air"];
-const HIS_PRED=["She cheers for the wrong team","She says a player is cute","She claps for absolutely no reason","She steals my food","She asks 'wait who's winning?'","She stands up just because the crowd did"];
+
 const BETS=[
   {q:"A player rolls 3+ times after a tiny tap",opts:["Yes","No"]},
   {q:"Stadium successfully does The Wave",opts:["Yes","No"]},
@@ -465,11 +516,10 @@ let S = {
   score:{h:0,a:0}, statusText:"Kickoff 4:00 PM PDT", lastStatus:null,
   events:[], seenEvents:[],
   herLog:{}, hisLog:{},
-  herPred:{}, hisPred:{},
+  herPred:{},
   betHer:{}, betHim:{}, betResult:{},
   commentary:[], quotes:[],
   prediction:{},
-  ratings:{},
   // local only
   fixtureId:null, homeIsCol:true,
   // synced but kept compact
@@ -518,7 +568,7 @@ function saveLocal(){
 
 /* ===================== JSONBIN SYNC ===================== */
 const SYNC_FIELDS=["score","statusText","lastStatus","events","seenEvents","herLog","hisLog",
-  "herPred","hisPred","betHer","betHim","betResult","commentary","quotes","prediction","ratings",
+  "herPred","betHer","betHim","betResult","commentary","quotes","prediction",
   "wagerHer","wagerHim","wagerRevealed","milestones","quizResult"];
 // photos synced separately with size check (added dynamically in pushSync)
 
@@ -572,7 +622,10 @@ async function pollSync(){
         if(newest&&newest.icon==="⚽"){
           const colScored2=newest.title.toLowerCase().includes("colombia");
           const ours=isOurGoal(newest.title);
-          if(ours)confetti();flashMascot(rand(ours?(colScored2?REACT.colGoal:REACT.jorGoal):REACT.theirGoal),ours?"goal":null);
+          if(ours)confetti();
+          flashMascot(rand(ours?(colScored2?REACT.colGoal:REACT.jorGoal):REACT.theirGoal),ours?"goal":null);
+          sendNotif(ours?"⚽ GOAL! 🎉":"⚽ They scored",newest.title);
+          setTimeout(()=>showSayThis(ours?SAY_THIS.ourGoal:SAY_THIS.theirGoal),2000);
         }
       }
       if(JSON.stringify(S.score)!==prevScore&&document.getElementById("tab-match")){
@@ -586,6 +639,7 @@ async function pollSync(){
 function startPolling(){
   clearInterval(pollInterval);
   pollInterval=setInterval(pollSync,5000);
+  requestNotifPerm();
 }
 
 async function createBin(){
@@ -817,7 +871,7 @@ function renderSurpriseReveal(){
   $app().innerHTML=`<div class="screen">
     <div class="eyebrow center">coach ball's got a message for you 💌</div>
     <h2 class="h2" style="text-align:center;margin:10px 0 14px">your move, Pathak</h2>
-    <div class="msg-bubble">${txt.replace(/\n/g,"<br/>")}</div>
+    <div class="msg-bubble">${nl2br(txt)}</div>
     <div class="spacer"></div>
     <a class="btn alt" href="${smsUrl}" style="text-decoration:none" onclick="markSmsOpened()">💌 open in messages →</a>
     <p class="muted center" style="font-size:.76rem;margin:8px 0 18px">opens a pre-written text to Rahman · edit before sending</p>
@@ -838,7 +892,7 @@ function renderSheYes(){
     <div style="font-size:2.8rem;text-align:center">🎉</div>
     <h2 class="h2" style="text-align:center;margin:12px 0 6px">SHE SAID YES.</h2>
     <p class="muted center" style="margin-bottom:24px;font-size:.9rem">now send her the code so she can join the app</p>
-    <div class="msg-bubble" style="font-size:.88rem">${codeBody.replace(/\n/g,"<br/>")}</div>
+    <div class="msg-bubble" style="font-size:.88rem">${nl2br(codeBody)}</div>
     <div class="spacer"></div>
     <a class="btn alt" href="${codeSMS}" style="text-decoration:none">📲 send her the code →</a>
     <p class="muted center" style="font-size:.76rem;margin:8px 0 18px">opens a pre-written text · edit before sending</p>
@@ -861,7 +915,7 @@ function renderSheNo(){
   $app().innerHTML=`<div class="screen">
     <div style="font-size:2.2rem;text-align:center">😤💛</div>
     <h2 class="h2" style="text-align:center;margin:10px 0 14px">okay. try this one.</h2>
-    <div class="msg-bubble" style="font-size:.88rem">${txt.replace(/\n/g,"<br/>")}</div>
+    <div class="msg-bubble" style="font-size:.88rem">${nl2br(txt)}</div>
     <div class="spacer"></div>
     <a class="btn alt" href="${smsUrl}" style="text-decoration:none">💌 send this one →</a>
     <p class="muted center" style="font-size:.76rem;margin:8px 0 18px">opens in messages · edit before sending</p>
@@ -941,36 +995,7 @@ function finishRahmanWelcome(){
   setTimeout(()=>flashMascot("You're in, Rahman! Football is life, baby. Let's get it. 🏟️"),300);
 }
 
-/* ===================== SESSION SCREEN ===================== */
-let sessionMode="start"; // "start" | "joining"
 
-function renderSessionScreen(){
-  if(sessionMode==="joining"){
-    $app().innerHTML=`<div class="screen">
-      <div class="eyebrow center">joining a session</div>
-      <h1 class="h1 center" style="margin:8px 0 6px">enter the code</h1>
-      <p class="muted center" style="margin-bottom:18px;font-size:.9rem">They'll see it on their phone after they create the session.</p>
-      <input class="join-input" id="joinCode" placeholder="paste code" autocomplete="off" autocorrect="off" autocapitalize="off"/>
-      <div class="spacer"></div>
-      <button class="btn" id="joinBtn" onclick="doJoin()">join →</button>
-      <button class="btn ghost" style="margin-top:10px" onclick="sessionMode='start';renderSessionScreen()">← back</button>
-    </div>`;
-    return;
-  }
-  $app().innerHTML=`<div class="screen center">
-    <div style="font-size:3.6rem">⚽</div>
-    <div class="eyebrow" style="margin-top:12px">game day, june 7</div>
-    <h1 class="h1" style="margin:8px 0 4px">foulplay.</h1>
-    <p class="muted" style="max-width:280px;margin:0 auto 28px;font-size:.92rem">
-      Colombia vs. Jordan · Snapdragon Stadium · 4:00 PM
-    </p>
-    <button class="btn alt" onclick="doCreate()" id="createBtn">create a session</button>
-    <p class="muted" style="font-size:.78rem;margin:8px 0">tap this on the first phone</p>
-    <div class="divider"></div>
-    <button class="btn ghost" onclick="sessionMode='joining';renderSessionScreen()">join with a code</button>
-    <p class="muted" style="font-size:.78rem;margin-top:8px">tap this on the second phone</p>
-  </div>`;
-}
 
 async function doCreate(){
   document.getElementById("createBtn").textContent="creating...";
@@ -1400,15 +1425,7 @@ function renderQuotes(){
     `<div class="logline"><div class="meta">${esc(q.who||'?')} · ${esc(q.t)}</div>"${esc(q.text)}"</div>`).join("")
     ||`<p class="muted" style="font-size:.85rem">Wall's empty. Fill it up today. 😄</p>`;
 }
-function addQuote(){
-  const who=document.getElementById("qWho")?.value.trim();
-  const text=document.getElementById("qText")?.value.trim();
-  if(!text)return;
-  S.quotes.push({who:who||"?",text,t:nowClock()});
-  document.getElementById("qWho").value="";document.getElementById("qText").value="";
-  document.getElementById("quoteWall").innerHTML=renderQuotes();
-  syncSave();
-}
+
 
 /* ===================== WAGER ===================== */
 function wagerCardContent(who){
@@ -1826,8 +1843,16 @@ async function pollNow(){
     const st=f.fixture.status.short;
     S.statusText=statusLabel(st,f.fixture.status.elapsed);
     if(st!==S.lastStatus){
-      if(st==="1H"&&S.lastStatus==="NS")flashMascot(rand(REACT.kickoff),"celebrate");
-      if(st==="HT")flashMascot(rand(REACT.half),"celebrate");
+      if(st==="1H"&&S.lastStatus==="NS"){
+        flashMascot(rand(REACT.kickoff),"celebrate");
+        sendNotif("⚽ KICKOFF!","Colombia vs Jordan is live. Let's go.");
+        setTimeout(()=>showSayThis(SAY_THIS.kickoff),2000);
+      }
+      if(st==="HT"){
+        flashMascot(rand(REACT.half),"celebrate");
+        sendNotif("🟡 HALFTIME","Take a breather — see you in the second half.");
+        setTimeout(()=>showSayThis(SAY_THIS.half),2500);
+      }
       if(st==="FT"||st==="AET"||st==="PEN")flashMascot(rand(REACT.full),"celebrate");
       S.lastStatus=st;
     }
@@ -1842,8 +1867,17 @@ async function pollNow(){
     S.events.forEach(e=>{
       if(!S.seenEvents.includes(e.key)){
         S.seenEvents.push(e.key);
-        if(e.icon==="⚽"){const colG=e.title.toLowerCase().includes("colombia");const ours=isOurGoal(e.title);if(ours)confetti();flashMascot(rand(ours?(colG?REACT.colGoal:REACT.jorGoal):REACT.theirGoal),ours?"goal":null);}
-        else if(e.icon==="🟨"||e.icon==="🟥")flashMascot(rand(REACT.card));
+        if(e.icon==="⚽"){
+          const colG=e.title.toLowerCase().includes("colombia");
+          const ours=isOurGoal(e.title);
+          if(ours)confetti();
+          flashMascot(rand(ours?(colG?REACT.colGoal:REACT.jorGoal):REACT.theirGoal),ours?"goal":null);
+          sendNotif(ours?"⚽ GOAL! 🎉":"⚽ They scored",e.title);
+          setTimeout(()=>showSayThis(ours?SAY_THIS.ourGoal:SAY_THIS.theirGoal),2000);
+        } else if(e.icon==="🟨"||e.icon==="🟥"){
+          flashMascot(rand(REACT.card));
+          setTimeout(()=>showSayThis(SAY_THIS.card),1500);
+        }
       }
     });
     syncSave();paintScoreboard();
@@ -1915,6 +1949,7 @@ function isOurGoal(teamName){
   return prefer==="col"?col:!col;
 }
 function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function nl2br(s){return(s||"").replace(/\n/g,"<br/>");}
 function isKickoffPassed(){return S.lastStatus&&["1H","HT","2H","ET","PEN","FT","AET","ABD"].includes(S.lastStatus);}
 function nowClock(){const d=new Date();let h=d.getHours(),m=d.getMinutes();const ap=h>=12?"PM":"AM";h=h%12||12;const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];return mo+" "+d.getDate()+" · "+h+":"+(m<10?"0":"")+m+" "+ap;}
 function hideNav(){document.getElementById("nav").style.display="none";}
@@ -1932,6 +1967,30 @@ function submitQuickQuote(){
   closeQuickQuote();
   const qw=document.getElementById("quoteWall");if(qw)qw.innerHTML=renderQuotes();
   syncSave();flashMascot("That one's a keeper. 📜");
+}
+
+/* ===================== SAY THIS ===================== */
+let sayThisTimer=null;
+function showSayThis(pool){
+  if(!pool||!pool.length||S.jerseyRole!=="rahman")return;
+  document.getElementById("sayThisText").textContent=rand(pool);
+  document.getElementById("sayThisCard").classList.add("show");
+  clearTimeout(sayThisTimer);
+  sayThisTimer=setTimeout(closeSayThis,18000);
+}
+function closeSayThis(){
+  document.getElementById("sayThisCard").classList.remove("show");
+  clearTimeout(sayThisTimer);
+}
+
+/* ===================== NOTIFICATIONS ===================== */
+function requestNotifPerm(){
+  if(!("Notification" in window)||Notification.permission!=="default")return;
+  Notification.requestPermission();
+}
+function sendNotif(title,body){
+  if(!("Notification" in window)||Notification.permission!=="granted")return;
+  try{new Notification(title,{body});}catch(e){}
 }
 
 /* ===================== KISS CAM ===================== */

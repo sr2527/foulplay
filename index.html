@@ -355,8 +355,8 @@ const QUOTES = [
 ];
 const REACT = {
   kickoff:["Here we go! I solemnly swear I know almost nothin' about this sport, but I am FIRED UP. 🔥","Kickoff baby. Onward. Forward!","Football is life and today it's YOUR life too. Let's get it!"],
-  colGoal:["FOOTBALL IS LIFE!!! Did y'all SEE that?! 🎉","That right there is what hope looks like. GOOOOL Colombia! 🇨🇴","I'm not crying, YOU'RE crying. GOAL!!!","GET IN! The Cafeteros are cooking today!"],
-  jorGoal:["Okay okay — be a goldfish. 10-second memory. We move on, together. 🐠","Jordan strikes. Every disadvantage has its advantage. Heads up.","That's alright — it's a long ol' game and we got each other."],
+  ourGoal:["FOOTBALL IS LIFE!!! Did y'all SEE that?! 🎉","That right there is what hope looks like. GOOOAL! 🎉","I'm not crying, YOU'RE crying. GOAL!!!","GET IN! They are cooking today! 🔥"],
+  theirGoal:["Okay okay — be a goldfish. 10-second memory. We move on, together. 🐠","Every disadvantage has its advantage. Heads up.","That's alright — it's a long ol' game and we got each other."],
   half:["Halftime! Go stretch them legs and refill that fancy cup. ☕","It ain't about the score at the half. It's about who shows up in the second.","Rest up, you two. Best seat in the house for the second half."],
   full:["Win or lose, y'all showed up for each other today. That's the whole ballgame. ❤️","Final whistle. Now go get them tacos. The loser's buying. 🌮","Proud of ya. Both of ya. Now go live your life."],
   card:["Ref's gotta ref. Don't let it live rent-free in your head.","Be a goldfish about it. 🐠","Whistle's just a fella with a job."],
@@ -569,8 +569,8 @@ async function pollSync(){
       if(S.events.length>prevEvents){
         const newest=S.events[S.events.length-1];
         if(newest&&newest.icon==="⚽"){
-          const colScored=newest.title.toLowerCase().includes("colombia");
-          if(colScored)confetti();flashMascot(rand(colScored?REACT.colGoal:REACT.jorGoal),colScored?"goal":null);
+          const ours=isOurGoal(newest.title);
+          if(ours)confetti();flashMascot(rand(ours?REACT.ourGoal:REACT.theirGoal),ours?"goal":null);
         }
       }
       if(JSON.stringify(S.score)!==prevScore&&document.getElementById("tab-match")){
@@ -1763,12 +1763,6 @@ function manualScore(){
   if(h===null)return;
   S.score={h:parseInt(h)||0,a:parseInt(a)||0};syncSave();paintScoreboard();
 }
-function demoGoal(){
-  S.score=S.score||{h:0,a:0};S.score.h++;
-  S.events=S.events||[];
-  S.events.push({min:S.events.length*8+11,icon:"⚽",title:"GOAL — Colombia",detail:"Demo: Luis Díaz rifles it into the top corner"});
-  syncSave();paintScoreboard();confetti();flashMascot(rand(REACT.colGoal));
-}
 async function findFixture(){
   try{
     const r=await fetch("https://v3.football.api-sports.io/fixtures?date=2026-06-07&timezone=America/Los_Angeles",
@@ -1809,7 +1803,7 @@ async function pollNow(){
     S.events.forEach(e=>{
       if(!S.seenEvents.includes(e.key)){
         S.seenEvents.push(e.key);
-        if(e.icon==="⚽"){const col=e.title.toLowerCase().includes("colombia");if(col)confetti();flashMascot(rand(col?REACT.colGoal:REACT.jorGoal),col?"goal":null);}
+        if(e.icon==="⚽"){const ours=isOurGoal(e.title);if(ours)confetti();flashMascot(rand(ours?REACT.ourGoal:REACT.theirGoal),ours?"goal":null);}
         else if(e.icon==="🟨"||e.icon==="🟥")flashMascot(rand(REACT.card));
       }
     });
@@ -1874,6 +1868,12 @@ function bump(group,i,d){
 }
 function syncSave(){saveLocal();pushSync();}
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
+// returns true if the scoring team is "our" team based on quiz result (defaults to Colombia)
+function isOurGoal(teamName){
+  const col=teamName.toLowerCase().includes("colombia");
+  const prefer=S.quizResult||"col";
+  return prefer==="col"?col:!col;
+}
 function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function nowClock(){const d=new Date();let h=d.getHours(),m=d.getMinutes();const ap=h>=12?"PM":"AM";h=h%12||12;const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];return mo+" "+d.getDate()+" · "+h+":"+(m<10?"0":"")+m+" "+ap;}
 function hideNav(){document.getElementById("nav").style.display="none";}

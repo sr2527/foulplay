@@ -1229,14 +1229,7 @@ function tabHis(){return `<section id="tab-his" class="tab pad">
   </div>
 
   <div class="spacer"></div>
-  ${S.quizResult
-    ? `<div class="card center" style="background:#F3F7FD">
-        <div class="muted" style="font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">today you're riding with</div>
-        <div style="font-size:2rem">${TEAMS[S.quizResult].flag}</div>
-        <div style="font-weight:700;font-size:1rem;margin-top:4px">${TEAMS[S.quizResult].name}</div>
-        <button class="btn ghost" style="margin-top:10px;font-size:.8rem" onclick="openQuiz()">retake quiz</button>
-       </div>`
-    : `<button class="btn ghost" onclick="openQuiz()">⚽ who should we root for? (take the quiz)</button>`}
+  ${quizResultCard()}
 </section>`;}
 
 function renderComm(){
@@ -1295,14 +1288,7 @@ function tabHers(){return `<section id="tab-hers" class="tab pad">
   </div>
 
   <div class="spacer"></div>
-  ${S.quizResult
-    ? `<div class="card center" style="background:#F3F7FD">
-        <div class="muted" style="font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">today you're riding with</div>
-        <div style="font-size:2rem">${TEAMS[S.quizResult].flag}</div>
-        <div style="font-weight:700;font-size:1rem;margin-top:4px">${TEAMS[S.quizResult].name}</div>
-        <button class="btn ghost" style="margin-top:10px;font-size:.8rem" onclick="openQuiz()">retake quiz</button>
-       </div>`
-    : `<button class="btn ghost" onclick="openQuiz()">⚽ who should we root for? (take the quiz)</button>`}
+  ${quizResultCard()}
 </section>`;}
 
 function addHisQuote(){
@@ -1634,6 +1620,18 @@ function tabPlan(){return `<section id="tab-plan" class="tab pad">
 </section>`;}
 
 /* ===================== QUIZ ===================== */
+function quizResultCard(){
+  if(!S.quizResult) return `<button class="btn ghost" onclick="openQuiz()">⚽ who should we root for? (take the quiz)</button>`;
+  const label=S.quizResult==="fun"
+    ? {flag:"🇨🇴🇯🇴",name:"everyone tbh"}
+    : {flag:TEAMS[S.quizResult].flag,name:TEAMS[S.quizResult].name};
+  return `<div class="card center" style="background:#F3F7FD">
+    <div class="muted" style="font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">today you're riding with</div>
+    <div style="font-size:2rem">${label.flag}</div>
+    <div style="font-weight:700;font-size:1rem;margin-top:4px">${label.name}</div>
+    <button class="btn ghost" style="margin-top:10px;font-size:.8rem" onclick="openQuiz()">retake quiz</button>
+   </div>`;
+}
 let quizStep=0,quizScore={col:0,jor:0};
 function openQuiz(){quizStep=0;quizScore={col:0,jor:0};renderQuiz();}
 function renderQuiz(){
@@ -1648,9 +1646,31 @@ function renderQuiz(){
       <button class="btn ghost" style="margin-top:14px" onclick="document.getElementById('nav').style.display='flex';render();go('hers')">← back</button>
     </div>`;
   }else{
-    const w=quizScore.col>=quizScore.jor?"col":"jor";const t=TEAMS[w];
-    S.quizResult=w;syncSave();
-    document.getElementById("nav").style.display="flex";
+    const w=quizScore.col>=quizScore.jor?"col":"jor";
+    showQuizResult(w);
+  }
+}
+function showQuizResult(w){
+  S.quizResult=w;syncSave();
+  document.getElementById("nav").style.display="flex";
+  if(w==="fun"){
+    $app().innerHTML=`<div class="screen center">
+      <div style="font-size:3.6rem">🇨🇴🇯🇴</div>
+      <div class="eyebrow" style="margin-top:10px">today, you ride with</div>
+      <h1 class="h1" style="margin:6px 0">everyone tbh</h1>
+      <p class="muted" style="max-width:280px;margin:0 auto">chaos. joy. beautiful football.<br>you just love the game and that's valid actually.</p>
+      <div class="spacer"></div>
+      <button class="btn alt" onclick="render();go(S.tab||'match')">i StAnD bY tHiS →</button>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+        <button class="btn ghost" onclick="showQuizResult('col')" style="font-size:.9rem">actually... 🇨🇴 Colombia</button>
+        <button class="btn ghost" onclick="showQuizResult('jor')" style="font-size:.9rem">actually... 🇯🇴 Jordan</button>
+      </div>
+    </div>`;
+    confetti();
+    flashMascot("CHAOS. BEAUTY. FOOTBALL. I respect it entirely. 🎊");
+  }else{
+    const t=TEAMS[w];
+    const other=w==="col"?"jor":"col";
     $app().innerHTML=`<div class="screen center">
       <div style="font-size:3.6rem">${t.flag}</div>
       <div class="eyebrow" style="margin-top:10px">today, you ride with</div>
@@ -1659,6 +1679,10 @@ function renderQuiz(){
       <div class="flagband" style="max-width:180px;margin:16px auto">${t.colors.map(c=>`<i style="background:${c}"></i>`).join("")}</div>
       <div class="spacer"></div>
       <button class="btn alt" onclick="render();go(S.tab||'match')">I can work with that →</button>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+        <button class="btn ghost" onclick="showQuizResult('${other}')" style="font-size:.9rem">actually... ${TEAMS[other].flag} ${TEAMS[other].name}</button>
+        <button class="btn ghost" onclick="showQuizResult('fun')" style="font-size:.85rem;color:var(--soft)">i jUsT wAnT eVeRyOnE tO hAvE a GoOd TiMe 🙏</button>
+      </div>
     </div>`;
     flashMascot("Now you got a side. Football is LIFE! 🎉");
   }
@@ -1872,8 +1896,9 @@ function syncSave(){saveLocal();pushSync();}
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
 // returns true if the scoring team is "our" team based on quiz result (defaults to Colombia)
 function isOurGoal(teamName){
-  const col=teamName.toLowerCase().includes("colombia");
   const prefer=S.quizResult||"col";
+  if(prefer==="fun") return true;
+  const col=teamName.toLowerCase().includes("colombia");
   return prefer==="col"?col:!col;
 }
 function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}

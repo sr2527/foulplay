@@ -373,8 +373,7 @@ const REACT = {
   theirGoal:["Okay okay — be a goldfish. 10-second memory. We move on, together. 🐠","Every disadvantage has its advantage. Heads up.","That's alright — it's a long ol' game and we got each other.","Be a goldfish. Ten seconds. We're fine. 🐠"],
   half:["Halftime! ¡Qué partido! Go stretch them legs and refill that fancy cup. ☕","It ain't about the score at the half. It's about who shows up in the second.","Rest up, you two. Best seat in the house for the second half."],
   full:["Win or lose, y'all showed up for each other today. That's the whole ballgame. ❤️","Final whistle. ¡Qué día! Now go get them tacos. The loser's buying. 🌮","Proud of ya. Both of ya. Now go live your life."],
-  card:["Ref's gotta ref. Don't let it live rent-free in your head.","Be a goldfish about it. 🐠","Whistle's just a fella with a job."],
-  var:["They're checkin' the tape. Patience — it's a virtue AND a Tom Petty song.","VAR: technology ruining beautiful moments since forever. Be a goldfish."]
+  card:["Ref's gotta ref. Don't let it live rent-free in your head.","Be a goldfish about it. 🐠","Whistle's just a fella with a job."]
 };
 const SAY_THIS={
   ourGoal:[
@@ -492,14 +491,6 @@ const QUIZ_Q=[
   {q:"soundtrack of the afternoon",a:[["cumbia drums & reggaeton","col"],["quiet focus, then a roar","jor"]]},
   {q:"how do you celebrate a win?",a:[["loud, dancing, yellow everywhere","col"],["earned the hard way, 1-0","jor"]]}
 ];
-const ONB=[
-  {k:"free",q:"are you free from 3 to 6?",sub:"the window we're working with",
-   opts:[["all yours","blocked it off"],["mostly","a couple loose ends but basically yes"],["gotta flex","might need to duck out"]]},
-  {k:"work",q:"how much work is hanging over you?",sub:"be honest",
-   opts:[["none","free as a bird"],["a little","an email or two i could knock out first"],["a lot","brain is kinda full right now"]]},
-  {k:"energy",q:"what's the energy right now?",sub:"this second",
-   opts:[["hyped","let's GO"],["chill","good but low-key"],["low battery","need an easy on-ramp"]]}
-];
 
 /* ===================== STATE ===================== */
 let S = {
@@ -509,7 +500,7 @@ let S = {
   // session
   binId:null, role:null, // "host" or "guest"
   // onboarding
-  onboarded:false, answers:{},
+  onboarded:false,
   // tab
   tab:"match",
   // shared (synced)
@@ -545,7 +536,6 @@ function loadLocal(){
   S.photos=ls("photos",{});
   S.milestones=ls("milestones",{});
   S.onboarded=ls("onboarded",false);
-  S.answers=ls("answers",{});
   S.binId=ls("binId",null);
   S.role=ls("role",null);
   S.tab=ls("tab","match");
@@ -560,7 +550,7 @@ function saveLocal(){
   lsSet("smsOpened",S.smsOpened);
   lsSet("fixtureId",S.fixtureId);lsSet("homeIsCol",S.homeIsCol);
   lsSet("photos",S.photos);lsSet("milestones",S.milestones);
-  lsSet("onboarded",S.onboarded);lsSet("answers",S.answers);
+  lsSet("onboarded",S.onboarded);
   lsSet("binId",S.binId);lsSet("role",S.role);lsSet("tab",S.tab);
   lsSet("rahmanWelcomed",S.rahmanWelcomed);
   lsSet("quizResult",S.quizResult);
@@ -638,7 +628,10 @@ async function pollSync(){
 
 function startPolling(){
   clearInterval(pollInterval);
-  pollInterval=setInterval(pollSync,5000);
+  pollInterval=setInterval(()=>{
+    if(["FT","AET","PEN"].includes(S.lastStatus))return;
+    pollSync();
+  },5000);
   requestNotifPerm();
 }
 
@@ -730,9 +723,9 @@ function jerseyHTML(col,sleeve,textCol,name,num){
 
 function renderJerseyPicker(){
   $app().innerHTML=`<div class="screen center" style="padding-top:44px">
-    <div class="eyebrow">june 7 · snapdragon stadium</div>
+    <div class="eyebrow">foulplay ⚽</div>
     <h1 class="h1" style="margin:10px 0 4px;font-size:1.9rem">who's suiting up?</h1>
-    <p class="muted" style="font-size:.88rem;margin-bottom:8px">tap your jersey to get started</p>
+    <p class="muted" style="font-size:.88rem;margin-bottom:8px">tap your jersey</p>
     <div class="jersey-stage">
       <button class="jersey-btn" onclick="pickJersey('pathak')">
         ${jerseyHTML("#FCD116","#003087","#1a2e6b","PATHAK","27")}
@@ -743,7 +736,6 @@ function renderJerseyPicker(){
         <div class="jersey-tag" style="color:#c9522a;margin-top:6px">Rahman</div>
       </button>
     </div>
-    <p class="muted" style="font-size:.76rem;margin-top:6px">⚽ foulplay · colombia vs jordan</p>
   </div>`;
 }
 
@@ -1025,70 +1017,6 @@ async function doJoin(){
   }catch(e){alert("Network error.");document.getElementById("joinBtn").disabled=false;document.getElementById("joinBtn").textContent="join →";}
 }
 
-/* ===================== ONBOARDING ===================== */
-let onbStep=0;
-
-function renderOnboard(step){
-  onbStep=step;
-  if(step===0){
-    $app().innerHTML=`<div class="screen center">
-      <div style="font-size:3.4rem">⚽</div>
-      <div class="eyebrow" style="margin-top:14px">coach ball here</div>
-      <h1 class="h1" style="margin:10px 0 8px">before kickoff</h1>
-      <p class="muted" style="max-width:300px;margin:0 auto 24px;font-size:.9rem">
-        I'm gonna ask you three quick things, then set you up with a plan for the afternoon.
-      </p>
-      <div class="card center" style="margin-bottom:18px">
-        <div class="muted" style="font-size:.8rem;margin-bottom:6px">your session code — share this</div>
-        <div class="code-box" onclick="copyCode()">${S.binId}</div>
-        <p class="muted" style="font-size:.78rem">tap to copy · send to the second phone</p>
-      </div>
-      <button class="btn" onclick="renderOnboard(1)">let's go →</button>
-    </div>`;return;
-  }
-  if(step<=ONB.length){
-    const c=ONB[step-1];
-    $app().innerHTML=`<div class="screen">
-      <div class="progress">${ONB.map((_,i)=>`<i class="${i<step?'fill':''}"></i>`).join("")}</div>
-      <div class="eyebrow">question ${step} of ${ONB.length}</div>
-      <h1 class="h1" style="margin:6px 0 4px">${c.q}</h1>
-      <p class="muted" style="margin-bottom:20px">${c.sub}</p>
-      ${c.opts.map((o,i)=>`<button class="opt ${S.answers[c.k]===i?'pick':''}" onclick="pickOnb('${c.k}',${i})">
-        ${o[0]}<div class="sub">${o[1]}</div></button>`).join("")}
-    </div>`;return;
-  }
-  // plan screen
-  const a=S.answers;
-  const leaveTime=a.work===2?"2:20":"2:30";
-  const lines=[];
-  if(a.work===2)lines.push("You've got a full plate — do the work at home or a cafe first, then go hands-free. No laptop at the stadium anyway (security won't let it through).");
-  else if(a.work===1)lines.push("Knock out those emails before you leave. Lock the laptop away and step out empty-handed.");
-  else lines.push("Nothing hanging over you — pure date mode. 🙌");
-  if(a.energy===0)lines.push("You're hyped — lean into the fan fest, get there for the 3:05 outdoor party vibe.");
-  else if(a.energy===2)lines.push("Low battery? Keep it gentle. Cafe or couch first, easy trolley ride, let the crowd energy carry you in.");
-  else lines.push("Chill suits today. No rush, just flow.");
-  if(a.free===2)lines.push("Since you might need to flex — grab an aisle seat so ducking out is painless if needed.");
-  $app().innerHTML=`<div class="screen">
-    <div class="eyebrow center">your afternoon, sorted</div>
-    <h1 class="h1 center" style="margin:8px 0 16px">here's the play 🟡</h1>
-    <div class="card">
-      <div style="font-family:'Fraunces',serif;font-size:1.05rem;margin-bottom:10px">
-        Leave around <b>${leaveTime}</b>, aim to arrive ~<b>3:05</b>
-      </div>
-      ${lines.map(l=>`<p style="margin:8px 0;font-size:.92rem">• ${l}</p>`).join("")}
-      <div class="divider"></div>
-      <p class="muted" style="font-size:.84rem">Full timeline is in the Plan tab. The good stuff is waiting inside.</p>
-    </div>
-    <div class="spacer"></div>
-    <button class="btn alt" onclick="finishOnb()">take me in →</button>
-  </div>`;
-}
-function pickOnb(k,i){S.answers[k]=i;saveLocal();renderOnboard(onbStep+1);}
-function finishOnb(){
-  S.onboarded=true;saveLocal();
-  render();go("match");
-  flashMascot(rand(QUOTES));
-}
 function copyCode(){
   navigator.clipboard&&navigator.clipboard.writeText(S.binId);
   showSyncBar("code copied to clipboard!");
@@ -1198,8 +1126,9 @@ function paintScoreboard(){
   const lc=document.getElementById("liveControls");if(!lc)return;
   lc.innerHTML=`<div class="row" style="flex-wrap:wrap;gap:8px">
     <button class="chip" onclick="pollNow()">↻ refresh</button>
+    ${!S.fixtureId?`<button class="chip" onclick="manualScore()" style="border-color:var(--terra);color:var(--terra)">✏️ enter score</button>`:''}
   </div>
-  <p class="muted" style="font-size:.76rem;margin-top:8px">Live data 📡 · game updates every 90s · your logs sync in ~5s</p>`;
+  <p class="muted" style="font-size:.76rem;margin-top:8px">${S.fixtureId?'Live data 📡 · game updates every 90s · your logs sync in ~5s':'No live feed — enter the score manually if the API missed the fixture'}</p>`;
   renderFeed();
 }
 function renderFeed(){
@@ -1556,10 +1485,14 @@ function openRecap(){
     ${gradeCard("Rahman",herTitle,herGrades,herVerdict,"#E07A5F")}
     ${gradeCard("Pathak",himTitle,himGrades,himVerdict,"#163C6E")}
 
-    ${photosDone>0?`<div class="card" style="margin-bottom:14px">
-      <div style="font-weight:700;margin-bottom:10px">📸 ${photosDone} photo${photosDone>1?"s":""} from today</div>
-      <div class="recap-grid">${PHOTOS.filter(p=>S.photos[p.id]).map(p=>{const src=localStorage.getItem("hq_"+p.id)||S.photos[p.id];return`<div><img src="${src}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px"/><div style="font-size:.7rem;color:var(--soft);margin-top:3px;text-align:center">${p.cap}</div></div>`;}).join("")}</div>
-    </div>`:""}
+    ${(()=>{
+      const missionPhotos=PHOTOS.filter(p=>S.photos[p.id]).map(p=>({src:localStorage.getItem("hq_"+p.id)||S.photos[p.id],cap:p.cap}));
+      if(S.photos["kisscam"])missionPhotos.push({src:localStorage.getItem("hq_kisscam")||S.photos["kisscam"],cap:"Kiss Cam 💋"});
+      return missionPhotos.length>0?`<div class="card" style="margin-bottom:14px">
+        <div style="font-weight:700;margin-bottom:10px">📸 ${missionPhotos.length} photo${missionPhotos.length>1?"s":""} from today</div>
+        <div class="recap-grid">${missionPhotos.map(p=>`<div><img src="${p.src}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px"/><div style="font-size:.7rem;color:var(--soft);margin-top:3px;text-align:center">${p.cap}</div></div>`).join("")}</div>
+      </div>`:"";
+    })()}
 
     ${S.quotes.length>0?`<div class="card" style="margin-bottom:14px">
       <div style="font-weight:700;margin-bottom:10px">💬 the quote wall</div>
@@ -1887,7 +1820,7 @@ function statusLabel(st,el){
   return {NS:"Kickoff 4:00 PM PDT",HT:"Halftime — 15 min break",FT:"Full Time",PST:"Postponed",
     "1H":"1st Half "+(el||"")+"'","2H":"2nd Half "+(el||"")+"'",ET:"Extra Time",PEN:"Penalties",AET:"After Extra Time"}[st]||st;
 }
-setInterval(()=>{if(document.visibilityState==="visible")pollNow();},90000);
+setInterval(()=>{if(document.visibilityState==="visible"&&!["FT","AET","PEN"].includes(S.lastStatus))pollNow();},90000);
 
 /* ===================== PHOTOS ===================== */
 function resizeImg(img,maxPx,quality){

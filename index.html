@@ -584,6 +584,8 @@ function loadLocal(){
   S.tab=ls("tab","match");
   S.rahmanWelcomed=ls("rahmanWelcomed",false);
   S.quizResult=ls("quizResult",null);
+  // restore sync fields from local cache so bad wifi doesn't wipe them on refresh
+  SYNC_FIELDS.forEach(k=>{const v=ls("sf_"+k,undefined);if(v!==undefined)S[k]=v;});
 }
 function saveLocal(){
   lsSet("jerseyRole",S.jerseyRole);
@@ -599,6 +601,8 @@ function saveLocal(){
   lsSet("binId",S.binId);lsSet("role",S.role);lsSet("tab",S.tab);
   lsSet("rahmanWelcomed",S.rahmanWelcomed);
   lsSet("quizResult",S.quizResult);
+  // always cache sync fields locally so a failed push doesn't lose data
+  SYNC_FIELDS.forEach(k=>lsSet("sf_"+k,S[k]));
 }
 
 /* ===================== JSONBIN SYNC ===================== */

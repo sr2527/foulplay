@@ -617,7 +617,20 @@ function applySyncPayload(o){
   if(!o||!o.ts)return;
   if(o.ts<=S.remoteTs)return; // already have this
   S.remoteTs=o.ts;
-  SYNC_FIELDS.forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
+  SYNC_FIELDS.forEach(k=>{
+    if(o[k]===undefined)return;
+    // never overwrite each person's own data with the other phone's stale copy
+    if(k==="betHer"&&S.jerseyRole==="rahman")return;
+    if(k==="betHim"&&S.jerseyRole==="pathak")return;
+    if(k==="wagerHer"&&S.jerseyRole==="rahman")return;
+    if(k==="wagerHim"&&S.jerseyRole==="pathak")return;
+    if(k==="vibeLog"&&S.jerseyRole==="rahman")return;
+    if(k==="commentary"&&S.jerseyRole==="pathak")return;
+    if(k==="noteToHim"&&S.jerseyRole==="rahman")return;
+    if(k==="noteToHer"&&S.jerseyRole==="pathak")return;
+    if(k==="herPred"&&S.jerseyRole==="rahman")return;
+    S[k]=o[k];
+  });
   if(o.photos){Object.assign(S.photos,o.photos);lsSet("photos",S.photos);}
 }
 
@@ -1407,9 +1420,9 @@ function tabHers(){return `<section id="tab-hers" class="tab pad">
   <div class="spacer"></div>
   <div class="card">
     <div style="font-weight:700;margin-bottom:4px">🔮 will he, won't he</div>
-    <p class="muted" style="font-size:.74rem;margin-bottom:10px">${isKickoffPassed()?'predictions sealed at kickoff 🔒':'predict before the game — locks at kickoff'}</p>
-    ${HER_PRED.map((p,i)=>`<label style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);${isKickoffPassed()?'cursor:default':'cursor:pointer'}">
-      <input type="checkbox" ${S.herPred[i]?'checked':''} ${isKickoffPassed()?'disabled':''}
+    <p class="muted" style="font-size:.74rem;margin-bottom:10px">check what you think he'll do today</p>
+    ${HER_PRED.map((p,i)=>`<label style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer">
+      <input type="checkbox" ${S.herPred[i]?'checked':''}
         onchange="S.herPred[${i}]=this.checked;syncSave()"
         style="width:22px;height:22px;accent-color:var(--blue);flex-shrink:0"/>
       <span style="font-weight:600;font-size:.9rem">${p}</span>
